@@ -400,8 +400,7 @@ const FileView = () => {
           headers: {
             "Accept": "text/event-stream, application/json, text/plain",
             "Cache-Control": "no-cache",
-            // "Authorization": "Bearer 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"
-       "Authorization":  `Bearer ${EXPO_PUBLIC_HUGGING_FACE_TOKEN}`
+             "Authorization":  `Bearer ${EXPO_PUBLIC_HUGGING_FACE_TOKEN}`
           }
         });
 
