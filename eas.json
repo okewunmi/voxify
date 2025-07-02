@@ -1,0 +1,42 @@
+{
+  "cli": {
+    "version": ">= 14.4.1",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development",
+      "android": {
+        "gradleCommand": ":app:assembleDebug --warning-mode all",
+        "buildType": "apk"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "android": {
+        "gradleCommand": ":app:assembleDebug --warning-mode all",
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_HUGGING_FACE_TOKEN": "@EXPO_PUBLIC_HUGGING_FACE_TOKEN"
+      }
+    },
+    "production": {
+      "env": {
+        "EXPO_PUBLIC_HUGGING_FACE_TOKEN": "@EXPO_PUBLIC_HUGGING_FACE_TOKEN"
+      },
+      "autoIncrement": true,
+      "channel": "production",
+      "android": {
+        "gradleCommand": ":app:assembleRelease",
+        "buildType": "apk"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

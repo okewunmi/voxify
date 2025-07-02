@@ -1,0 +1,90 @@
+{
+  "expo": {
+    "name": "tts",
+    "slug": "tts",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icons.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/voxify.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.okewunmi.tts",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icons.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
+      "package": "com.okewunmi.tts",
+      "extraDependencies": {
+        "exclude": [
+          "com.android.support:support-compat",
+          "com.android.support:support-media-compat",
+          "com.android.support:support-compat",
+          "com.android.support:support-media-compat"
+        ]
+      },
+      "runtimeVersion": "1.0.0"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/voxify.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-splash-screen",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "buildToolsVersion": "35.0.0",
+            "useNextNotificationsApi": true,
+            "enableJetifier": true
+          },
+          "ios": {
+            "deploymentTarget": "15.1"
+          }
+        }
+      ],
+      "expo-audio",
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "9465643f-9bad-4f20-b33b-56c7b2d15ba5"
+      }
+    },
+    "owner": "fourfive",
+    "updates": {
+      "url": "https://u.expo.dev/9465643f-9bad-4f20-b33b-56c7b2d15ba5"
+    }
+  }
+}
