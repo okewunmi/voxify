@@ -99,10 +99,6 @@ const FileView = () => {
     
   };
 
-  //   const handleTranslation=async()=>{
-  // console.log('translating.....')
-  //   }
-
 
   const handleTranslation = async () => {
     console.log("Starting translation...");
