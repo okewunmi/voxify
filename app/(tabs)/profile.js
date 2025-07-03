@@ -1,6 +1,5 @@
 import { StyleSheet, Text, View, TouchableOpacity, Image } from "react-native";
 import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
-import { StyleSheet, Text, View, TouchableOpacity, Image } from "react-native";
 import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import React from "react";
