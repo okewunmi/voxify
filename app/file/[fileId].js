@@ -406,7 +406,6 @@ const FileView = () => {
             .trim();
     };
 
-
     const handleChunkChange = (index) => {
         setActiveIndex(index);
         if (chunkRefs.current[index]) {
