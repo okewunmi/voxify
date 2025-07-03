@@ -19,17 +19,17 @@ const profile = () => {
   const { setIsLogged, setUser, user } = useGlobalContext();
 
   const handleLogout = async () => {
-  try {
-    // Only attempt signOut without calling getAccount() first
-    await signOut();
-    setUser(null);
-    setIsLogged(false);
-  } catch (error) {
-    console.log("Logout failed:", error.message);
-    setUser(null);
-    setIsLogged(false);
-  }
-};
+    try {
+      // Only attempt signOut without calling getAccount() first
+      await signOut();
+      setUser(null);
+      setIsLogged(false);
+    } catch (error) {
+      console.log("Logout failed:", error.message);
+      setUser(null);
+      setIsLogged(false);
+    }
+  };
 
 
   return (
@@ -94,7 +94,7 @@ const profile = () => {
 export default profile;
 
 const styles = StyleSheet.create({
-  safe: {
+
   safe: {
     flex: 1,
     alignItems: "center",

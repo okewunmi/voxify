@@ -87,19 +87,10 @@ const FileView = () => {
         setIsTranslateModalSelect(true);
     }
 
-    // const handleSummary = async () => {
-    //   console.log("Starting summary...");
-
-    // };
     const handleSummary = async () => {
-        console.log("Starting summary...");
-        setIsModalVisible(false);
-        setIsSummaryModal(true);
-
-
+      console.log("Starting summary...");
     };
-
-
+    
     const handleTranslation = async () => {
         console.log("Starting translation...");
         setIsTranslateModalSelect(false);
@@ -628,13 +619,9 @@ const FileView = () => {
                                     <Text style={styles.TranslateBtnTxt}> Cancel</Text>
                                 </TouchableOpacity>
                             </View>
-
                         </View>
-
                     </View>
-
                 </View>
-
             </Modal>
 
             {/* Modal triggered Translation*/}

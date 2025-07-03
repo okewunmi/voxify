@@ -19,7 +19,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { FontAwesome6 } from "@expo/vector-icons";
 import { InferenceClient } from "@huggingface/inference";
 import { Picker } from '@react-native-picker/picker';
-import { EXPO_PUBLIC_HUGGING_FACE_TOKEN} from '@env';
+import { EXPO_PUBLIC_HUGGING_FACE_TOKEN } from '@env';
 const FileView = () => {
   const { scanId } = useLocalSearchParams();
   const navigation = useNavigation();
@@ -113,8 +113,8 @@ const FileView = () => {
           headers: {
             "Content-Type": "application/json",
             "Accept": "application/json",
-            
-          "Authorization":  `Bearer ${EXPO_PUBLIC_HUGGING_FACE_TOKEN}`
+
+            "Authorization": `Bearer ${EXPO_PUBLIC_HUGGING_FACE_TOKEN}`
           },
           body: JSON.stringify({
             data: [text, selectedLanguageFrom, selectedLanguageTo],
@@ -142,7 +142,7 @@ const FileView = () => {
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json",
-        "Authorization":  `Bearer ${EXPO_PUBLIC_HUGGING_FACE_TOKEN}`
+          "Authorization": `Bearer ${EXPO_PUBLIC_HUGGING_FACE_TOKEN}`
         },
         body: JSON.stringify({
           data: [text, selectedLanguageFrom, selectedLanguageTo],
@@ -225,8 +225,8 @@ const FileView = () => {
           headers: {
             "Accept": "text/event-stream, application/json, text/plain",
             "Cache-Control": "no-cache",
-          
-            "Authorization":  `Bearer ${EXPO_PUBLIC_HUGGING_FACE_TOKEN}`
+
+            "Authorization": `Bearer ${EXPO_PUBLIC_HUGGING_FACE_TOKEN}`
           }
         });
 
