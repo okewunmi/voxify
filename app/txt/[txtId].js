@@ -493,7 +493,7 @@ const FileView = () => {
                   index === activeIndex && styles.activeChunk,
                 ]}
               >
-                {chunk}
+                {chunk + " "}
               </Text>
             ))
           )}

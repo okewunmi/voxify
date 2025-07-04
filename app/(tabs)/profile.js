@@ -1,17 +1,11 @@
 import { StyleSheet, Text, View, TouchableOpacity, Image } from "react-native";
 import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
-import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import React from "react";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useGlobalContext } from "../../context/GlobalProvider"; // adjust path if needed
-import { signOut, getAccount } from "../../lib/appwrite";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useGlobalContext } from "../../context/GlobalProvider"; // adjust path if needed
 import { signOut, getAccount } from "../../lib/appwrite";
 
 const profile = () => {
