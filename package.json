@@ -1,5 +1,5 @@
 {
-  "name": "tts",
+  "name": "voxify",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "type": "commonjs",
@@ -28,7 +28,7 @@
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
     "buffer": "^6.0.3",
-    "expo": "53.0.16",
+    "expo": "~53.0.0",
     "expo-android-app-gradle-dependencies": "^0.1.0",
     "expo-audio": "~0.4.7",
     "expo-auth-session": "~6.2.0",

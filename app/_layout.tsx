@@ -60,48 +60,24 @@ const RootLayout = () => {
           }}
         >
           <Stack.Screen name="index" options={{ headerShown: false }} />
-          
+
           <Stack.Screen
             name="file/[fileId]"
             // options={{ headerRight: () => <CustomHeaderRight /> }}
           />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-
-          <Stack.Screen
-            name="AI/AiList"
-            options={{
-              headerStyle: {
-                backgroundColor: 'white',
-              },
-              headerTintColor: 'black',
-            }}
-          />
-
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-
-          <Stack.Screen
-            name="voices/selectVoice"
-            options={{ headerShown: false }}
-          />
-
           <Stack.Screen
             name="type/typing"
             options={{ headerTitle: 'Write or Paste Text' }}
           />
-
-
           <Stack.Screen
             name="url/[urlId]"
             // options={{ headerRight: () => <CustomHeaderRight /> }}
           />
 
-          <Stack.Screen
-            name="txt/[txtId]"
-          />
-          <Stack.Screen
-            name="imgScan/[scanId]"
-
-          />
+          <Stack.Screen name="txt/[txtId]" />
+          <Stack.Screen name="imgScan/[scanId]" />
           <Stack.Screen
             name="scan/scanPage"
             options={{

@@ -7,7 +7,7 @@ const index = () => {
   const navigation = useNavigation();
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.push('/intro1'); // Navigate to intro1.js after 5 seconds
+      router.push("/(auth)/intro1"); // Navigate to intro1.js after 5 seconds
     }, 3000);
 
     return () => clearTimeout(timer); // Clear timer on component unmount
