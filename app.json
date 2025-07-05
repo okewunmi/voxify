@@ -3,6 +3,7 @@
     "name": "Voxify",
     "slug": "Voxify",
     "version": "1.0.0",
+     "entryPoint": "./app/index.jsx",
     "orientation": "portrait",
     "icon": "./assets/images/icons.png",
     "scheme": "myapp",
