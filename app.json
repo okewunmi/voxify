@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "voxify",
+    "slug": "voxify",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icons.png",
+    "scheme": "voxify",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icons.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.fourfive.voxify"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/voxify.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/voxify.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "7c9414d3-bdbc-473f-a6ee-c4236297857a"
+      }
+    },
+    "owner": "fourfive"
+  }
+}
