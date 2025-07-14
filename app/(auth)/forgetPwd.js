@@ -21,10 +21,10 @@
 //     email: "",
 //   });
 // const submit = async () => {
-   
+
 //         console.log("forget password");
-      
-      
+
+
 //   };
 
 //   return (
@@ -88,7 +88,7 @@
 //   txt:{
 //     fontSize: 20,
 //     fontWeight: 'bold',
-   
+
 //   },
 //   txts: {
 //     fontSize: 13,
@@ -235,7 +235,7 @@
 //     <View style={styles.stepContainer}>
 //       <Text style={styles.title}>Reset Password</Text>
 //       <Text style={styles.subtitle}>Enter your email address associated with the your voxify account and we'll send you an OTP to reset your password </Text>
-      
+
 //       <TextInput
 //         style={styles.input}
 //         placeholder="Email Address"
@@ -271,7 +271,7 @@
 //     <View style={styles.stepContainer}>
 //       <Text style={styles.title}>Enter OTP</Text>
 //       <Text style={styles.subtitle}>Enter the 6-digit code sent to {email}</Text>
-      
+
 //       <TextInput
 //         style={styles.input}
 //         placeholder="Enter OTP"
@@ -315,7 +315,7 @@
 //     <View style={styles.stepContainer}>
 //       <Text style={styles.title}>New Password</Text>
 //       <Text style={styles.subtitle}>Enter your new password</Text>
-      
+
 //       <TextInput
 //         style={styles.input}
 //         placeholder="New Password"
@@ -444,409 +444,231 @@
 
 // export default PasswordResetScreen;
 
-import React, { useState } from 'react';
+import { router } from "expo-router";
+import { useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
-  StyleSheet,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView
+  View
 } from 'react-native';
-import { sendPasswordResetOTP, verifyPasswordResetOTP, resetPassword } from '../../lib/appwrite';
-
-const PasswordResetScreen = ({ navigation }) => {
-  const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: New Password
+import { handlePasswordRecoveryRequest } from '../../lib/appwrite'; // Import the modified function
+export default function PasswordRecoveryScreen({ navigation }) {
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [resendTimer, setResendTimer] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  // Email validation function
-  const isValidEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  // Step 1: Send OTP to email
-  const handleSendOTP = async () => {
+  const handlePasswordRecovery = async () => {
     if (!email.trim()) {
       Alert.alert('Error', 'Please enter your email address');
       return;
     }
 
-    if (!isValidEmail(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
-      return;
-    }
+    setLoading(true);
 
-    setIsLoading(true);
     try {
-      await sendPasswordResetOTP(email);
-      Alert.alert('Success', 'OTP sent to your email address. Please check your inbox and spam folder.');
-      setStep(2);
-      startResendTimer();
-    } catch (error) {
-      Alert.alert('Error', error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      const result = await handlePasswordRecoveryRequest(email.trim());
 
-  // Start resend timer
-  const startResendTimer = () => {
-    setResendTimer(60);
-    const interval = setInterval(() => {
-      setResendTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  // Step 2: Verify OTP
-  const handleVerifyOTP = async () => {
-    if (!otp.trim()) {
-      Alert.alert('Error', 'Please enter the OTP');
-      return;
-    }
-
-    if (otp.length !== 6) {
-      Alert.alert('Error', 'OTP must be 6 digits');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      await verifyPasswordResetOTP(email, otp);
-      Alert.alert('Success', 'OTP verified successfully');
-      setStep(3);
-    } catch (error) {
-      Alert.alert('Error', error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Step 3: Reset password
-  const handleResetPassword = async () => {
-    if (!newPassword.trim()) {
-      Alert.alert('Error', 'Please enter your new password');
-      return;
-    }
-
-    if (newPassword.length < 8) {
-      Alert.alert('Error', 'Password must be at least 8 characters long');
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
-      return;
-    }
-
-    // Password strength validation
-    const hasUpperCase = /[A-Z]/.test(newPassword);
-    const hasLowerCase = /[a-z]/.test(newPassword);
-    const hasNumbers = /\d/.test(newPassword);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(newPassword);
-
-    if (!hasUpperCase || !hasLowerCase || !hasNumbers || !hasSpecialChar) {
-      Alert.alert(
-        'Weak Password',
-        'Password should contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
-        [
-          { text: 'Continue Anyway', onPress: () => performPasswordReset() },
-          { text: 'Cancel', style: 'cancel' }
-        ]
-      );
-      return;
-    }
-
-    await performPasswordReset();
-  };
-
-  const performPasswordReset = async () => {
-    setIsLoading(true);
-    try {
-      await resetPassword(email, newPassword);
-      Alert.alert(
-        'Success',
-        'Password reset successfully! Please sign in with your new password.',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              // Clear all form data
-              setEmail('');
-              setOtp('');
-              setNewPassword('');
-              setConfirmPassword('');
-              setStep(1);
-              navigation.navigate('SignIn');
+      if (result.success) {
+        // Show success alert
+        Alert.alert(
+          'Recovery Email Sent',
+          result.message,
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                // Navigate back to sign in screen
+                // navigation.navigate('SignIn');
+                router.replace("/signIn");
+              }
             }
-          }
-        ]
-      );
+          ]
+        );
+      }
     } catch (error) {
       Alert.alert('Error', error.message);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
-
-  const renderStep1 = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.title}>Reset Password</Text>
-      <Text style={styles.subtitle}>
-        Enter your email address associated with your Voxify account and we'll send you an OTP to reset your password
-      </Text>
-      
-      <TextInput
-        style={styles.input}
-        placeholder="Email Address"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoComplete="email"
-        editable={!isLoading}
-      />
-
-      <TouchableOpacity
-        style={[styles.button, isLoading && styles.buttonDisabled]}
-        onPress={handleSendOTP}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <Text style={styles.buttonText}>Send OTP</Text>
-        )}
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Text style={styles.backButtonText}>Back to Sign In</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
-  const renderStep2 = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.title}>Enter OTP</Text>
-      <Text style={styles.subtitle}>
-        Enter the 6-digit code sent to {email}
-      </Text>
-      
-      <TextInput
-        style={styles.input}
-        placeholder="Enter OTP"
-        value={otp}
-        onChangeText={setOtp}
-        keyboardType="number-pad"
-        maxLength={6}
-        editable={!isLoading}
-      />
-
-      <TouchableOpacity
-        style={[styles.button, isLoading && styles.buttonDisabled]}
-        onPress={handleVerifyOTP}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <Text style={styles.buttonText}>Verify OTP</Text>
-        )}
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => setStep(1)}
-      >
-        <Text style={styles.backButtonText}>Back to Email</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.resendButton, resendTimer > 0 && styles.resendButtonDisabled]}
-        onPress={handleSendOTP}
-        disabled={isLoading || resendTimer > 0}
-      >
-        <Text style={[styles.resendButtonText, resendTimer > 0 && styles.resendButtonTextDisabled]}>
-          {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : 'Resend OTP'}
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
-
-  const renderStep3 = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.title}>New Password</Text>
-      <Text style={styles.subtitle}>Enter your new password</Text>
-      
-      <TextInput
-        style={styles.input}
-        placeholder="New Password"
-        value={newPassword}
-        onChangeText={setNewPassword}
-        secureTextEntry
-        editable={!isLoading}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Confirm New Password"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry
-        editable={!isLoading}
-      />
-
-      <Text style={styles.passwordHint}>
-        Password should be at least 8 characters and contain uppercase, lowercase, numbers, and special characters
-      </Text>
-
-      <TouchableOpacity
-        style={[styles.button, isLoading && styles.buttonDisabled]}
-        onPress={handleResetPassword}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <Text style={styles.buttonText}>Reset Password</Text>
-        )}
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => setStep(2)}
-      >
-        <Text style={styles.backButtonText}>Back to OTP</Text>
-      </TouchableOpacity>
-    </View>
-  );
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoidingView}
       >
-        {step === 1 && renderStep1()}
-        {step === 2 && renderStep2()}
-        {step === 3 && renderStep3()}
-      </ScrollView>
-    </KeyboardAvoidingView>
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Reset Password</Text>
+            <Text style={styles.subtitle}>
+              Enter your email address and we'll send you a link to reset your password
+            </Text>
+          </View>
+
+          <View style={styles.form}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Email Address</Text>
+              <TextInput
+                style={styles.input}
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Enter your email"
+                placeholderTextColor="#999"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!loading}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.button, loading && styles.buttonDisabled]}
+              onPress={handlePasswordRecovery}
+              disabled={loading}
+            >
+              {loading ? (
+                <View style={styles.buttonContent}>
+                  <ActivityIndicator size="small" color="#fff" />
+                  <Text style={styles.buttonText}>Sending...</Text>
+                </View>
+              ) : (
+                <Text style={styles.buttonText}>Send Recovery Link</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.backButton}
+              // onPress={() => navigation.navigate('SignIn')}
+              onPress={() => router.replace("/signIn")}
+              disabled={loading}
+            >
+              <Text style={styles.backButtonText}>Back to Sign In</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f8f9fa',
   },
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
+  keyboardAvoidingView: {
+    flex: 1,
   },
-  stepContainer: {
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 40,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 40,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 10,
-    color: '#333',
+    color: '#1a1a1a',
+    marginBottom: 12,
   },
   subtitle: {
     fontSize: 16,
+    color: '#6b7280',
     textAlign: 'center',
-    marginBottom: 30,
-    color: '#666',
-    lineHeight: 22,
+    lineHeight: 24,
+  },
+  form: {
+    flex: 1,
+  },
+  inputContainer: {
+    marginBottom: 24,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 20,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
     fontSize: 16,
-    backgroundColor: '#f9f9f9',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    color: '#1a1a1a',
   },
   button: {
-    backgroundColor: '#007bff',
-    padding: 15,
-    borderRadius: 8,
+    backgroundColor: '#3b82f6',
+    borderRadius: 12,
+    padding: 16,
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 16,
   },
   buttonDisabled: {
-    backgroundColor: '#ccc',
+    opacity: 0.6,
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   buttonText: {
-    color: 'white',
+    color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    marginLeft: 8,
   },
   backButton: {
-    padding: 15,
+    padding: 16,
     alignItems: 'center',
   },
   backButtonText: {
-    color: '#007bff',
+    color: '#3b82f6',
     fontSize: 16,
-  },
-  resendButton: {
-    padding: 10,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  resendButtonDisabled: {
-    opacity: 0.5,
-  },
-  resendButtonText: {
-    color: '#007bff',
-    fontSize: 14,
-  },
-  resendButtonTextDisabled: {
-    color: '#999',
-  },
-  passwordHint: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 20,
-    textAlign: 'center',
-    lineHeight: 16,
+    fontWeight: '600',
   },
 });
 
-export default PasswordResetScreen;
+// Alternative alert implementation with custom styling
+export function showSuccessAlert(message, onOK) {
+  Alert.alert(
+    'Success',
+    message,
+    [
+      {
+        text: 'OK',
+        onPress: onOK,
+        style: 'default',
+      },
+    ],
+    {
+      cancelable: false,
+    }
+  );
+}
+
+export function showErrorAlert(message) {
+  Alert.alert(
+    'Error',
+    message,
+    [
+      {
+        text: 'OK',
+        style: 'default',
+      },
+    ],
+    {
+      cancelable: false,
+    }
+  );
+}
