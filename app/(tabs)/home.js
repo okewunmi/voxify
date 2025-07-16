@@ -225,6 +225,7 @@ const home = () => {
       setIsSubmitting(false);
     }
   };
+  
   const handleUrl = async () => {
     // console.log("clicked!!");
     setShowModal(true);

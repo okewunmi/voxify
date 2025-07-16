@@ -295,7 +295,7 @@ const ScanScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'black',
+    backgroundColor: '#cecece',
   },
   camera: {
     flex: 1,
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: Dimensions.get('window').width,
-    height: '80%',
+    height: '98%',
     backgroundColor: '#fff',
   },
   controls: {
@@ -381,6 +381,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 20,
     backgroundColor: '#fff',
+    // borderRadius: 15,
+    borderTopStartRadius: 22,
+    borderTopEndRadius: 22,
   },
   counter: {
     marginHorizontal: 20,
@@ -393,20 +396,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   actionButton: {
-    padding: 15,
-    borderRadius: 8,
+    padding: 12,
+    borderRadius: 25,
     width: '45%',
     alignItems: 'center',
   },
   cancelButton: {
     backgroundColor: '#ccc',
+
   },
   continueButton: {
     backgroundColor: '#0066cc',
   },
   actionButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 'bold',
   },
 });

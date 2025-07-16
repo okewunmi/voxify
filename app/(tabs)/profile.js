@@ -73,6 +73,38 @@ const profile = () => {
       </View>
 
       <View style={styles.card}>
+        <TouchableOpacity style={styles.logout}>
+          <MaterialIcons name="security" size={24} color="black" />
+          <View><Text style={styles.heading2}>Account & Security</Text></View>
+        </TouchableOpacity>
+         <TouchableOpacity style={styles.logout}>
+          <MaterialIcons name="subscriptions" size={24}  />
+          <View><Text style={styles.heading2}>Billing & Subcriptions</Text></View>
+        </TouchableOpacity>
+         <TouchableOpacity style={styles.logout}>
+          <MaterialIcons name="credit-card" size={24}  />
+          <View><Text style={styles.heading2}>Payment Methods</Text></View>
+        </TouchableOpacity>
+         <TouchableOpacity style={styles.logout}>
+          <MaterialIcons name="merge" size={24} color="black" />
+          <View><Text style={styles.heading2}>Linked Accounts</Text></View>
+        </TouchableOpacity>
+         <TouchableOpacity style={styles.logout}>
+        <MaterialIcons name="remove-red-eye" size={24} color="black" />
+          <View><Text style={styles.heading2}>App Apperance</Text></View>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.logout}>
+          <MaterialIcons name="logout" size={24}  />
+          <View><Text style={styles.heading2}>Help & Support</Text></View>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.logout}>
+          <MaterialIcons name="star" size={24}  />
+          <View><Text style={styles.heading2}>Rate Us</Text></View>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.logout}>
+          <MaterialIcons name="call" size={24}  />
+          <View><Text style={styles.heading2}>Contact Developer</Text></View>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.logout} onPress={handleLogout}>
           <MaterialIcons name="logout" size={24} color="red" />
           <View><Text style={styles.red}>Logout</Text></View>
@@ -94,8 +126,8 @@ const styles = StyleSheet.create({
     height: "100%",
     backgroundColor: "#E1EBEE",
     paddingVertical: 20,
-    paddingHorizontal: 16,
-    gap: 15,
+    paddingHorizontal: 12,
+    gap: 12,
   },
   top: {
     flexDirection: "row",
@@ -145,6 +177,7 @@ const styles = StyleSheet.create({
   },
   txtBox: {
     justifyContent: "center",
+    alignContent: 'flex-start',
     // width: '5%',
     height: "100%",
     gap: 5,
@@ -156,7 +189,7 @@ const styles = StyleSheet.create({
   },
   heading2: {
     fontSize: 14,
-    fontWeight: "700",
+    fontWeight: "600",
   },
   txt: {
     fontSize: 12,
@@ -166,20 +199,20 @@ const styles = StyleSheet.create({
   txt2: {
     fontSize: 13,
     marginTop: -4,
-    marginLeft: -85,
+    // marginLeft: -85,
     fontWeight: "500",
 
   },
   person: {
     backgroundColor: '#ffff',
     height: 80,
-    borderRadius: 10,
+    borderRadius: 8,
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: 'space-between',
-    paddingHorizontal: 15,
-    gap: 10,
+    paddingHorizontal: 10,
+    gap: 5,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -200,14 +233,13 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     padding: 20,
-    height: 70,
-    // height: 420,
-    justifyContent: 'center',
-
+    // minHeight: 70,
+    height: 435,
+    justifyContent: 'space-between',
+    // gap: 20,
     backgroundColor: '#ffff',
     borderRadius: 10,
     shadowColor: '#000',
-    justifyContent: 'flex-end',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -220,7 +252,7 @@ const styles = StyleSheet.create({
   },
   logout: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 15,
     alignItems: 'center',
 
   },
