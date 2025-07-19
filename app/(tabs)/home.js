@@ -1,41 +1,41 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  Alert,
-  Modal,
-  ActivityIndicator,
-  TextInput,
-  FlatList
-} from "react-native";
-import React, { useState, useEffect } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import Entypo from "@expo/vector-icons/Entypo";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import Entypo from "@expo/vector-icons/Entypo";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Link, router } from "expo-router";
 import * as DocumentPicker from "expo-document-picker";
 import * as Network from 'expo-network';
+import { Link, router } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
   createDocument,
-  getCurrentUser,
   createUrl,
-  getAllUserContent,
   extractTextFromFile,
+  getAllUserContent,
+  getCurrentUser,
 } from "../../lib/appwrite";
 
 
 import Card from "../../components/Card";
+import CardScan from "../../components/CardScan";
 import CardTxt from "../../components/CardTxt";
 import CardWeb from "../../components/CardWeb";
-import CardScan from "../../components/CardScan";
 const home = () => {
   const [uploading, setUploading] = useState(false);
   const [user, setUser] = useState(null);
@@ -225,107 +225,194 @@ const home = () => {
   //     setIsSubmitting(false);
   //   }
   // };
-  
 
-// Modified handleFileUpload function with expanded file type support
-const handleFileUpload = async () => {
-  try {
-    setIsSubmitting(true);
-    setUploading(true);
 
-    // Expanded allowed file extensions based on your API support
-    const allowedExtensions = [
-      "pdf", "doc", "docx", "xlsx", "xls", "csv", "txt", 
-      "rtf", "xml", "json", "html", "htm", "md", "markdown"
-    ];
+  // Modified handleFileUpload function with expanded file type support
 
-    // Expanded MIME types for document picker
-    const allowedMimeTypes = [
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "application/vnd.ms-excel",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "text/csv",
-      "text/plain",
-      "application/rtf",
-      "application/xml",
-      "text/xml",
-      "application/json",
-      "text/html",
-      "text/markdown"
-    ];
+  // const handleFileUpload = async () => {
+  //   try {
+  //     setIsSubmitting(true);
+  //     setUploading(true);
 
-    // Show file picker with expanded types
-    const result = await DocumentPicker.getDocumentAsync({
-      type: allowedMimeTypes,
-      copyToCacheDirectory: true,
-    });
+  //     // Expanded allowed file extensions based on your API support
+  //     const allowedExtensions = [
+  //       "pdf", "doc", "docx", "xlsx", "xls", "csv", "txt", 
+  //       "rtf", "xml", "json", "html", "htm", "md", "markdown"
+  //     ];
 
-    if (!result.assets || result.assets.length === 0) {
-      console.log("No file selected");
-      return;
+  //     // Expanded MIME types for document picker
+  //     const allowedMimeTypes = [
+  //       "application/pdf",
+  //       "application/msword",
+  //       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  //       "application/vnd.ms-excel",
+  //       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  //       "text/csv",
+  //       "text/plain",
+  //       "application/rtf",
+  //       "application/xml",
+  //       "text/xml",
+  //       "application/json",
+  //       "text/html",
+  //       "text/markdown"
+  //     ];
+
+  //     // Show file picker with expanded types
+  //     const result = await DocumentPicker.getDocumentAsync({
+  //       type: allowedMimeTypes,
+  //       copyToCacheDirectory: true,
+  //     });
+
+  //     if (!result.assets || result.assets.length === 0) {
+  //       console.log("No file selected");
+  //       return;
+  //     }
+
+  //     const file = result.assets[0];
+  //     console.log("Selected file:", file.name);
+  //     console.log("File MIME Type:", file?.mimeType);
+
+  //     // Extract file extension
+  //     const fileExtension = file.name.split(".").pop().toLowerCase();
+
+  //     // Validate file extension
+  //     if (!allowedExtensions.includes(fileExtension)) {
+  //       throw new Error(`File extension not allowed: .${fileExtension}. Supported formats: ${allowedExtensions.join(', ')}`);
+  //     }
+
+  //     // Prepare file data for upload
+  //     const fileData = {
+  //       name: file.name,
+  //       uri: file.uri,
+  //       type: file.mimeType,
+  //       size: file.size,
+  //     };
+
+  //     // Upload and extract text using Netlify API
+  //     console.log("Starting file upload and text extraction...");
+  //     const { extractedText, fileUrl } = await extractTextFromFile(fileData);
+  //     console.log("File uploaded and text extracted successfully");
+
+  //     if (!fileUrl) {
+  //       throw new Error("File upload failed: No file URL returned");
+  //     }
+
+  //     // Create document record in Appwrite Database with extracted text
+  //     await createDocument(file, user.$id, fileUrl, extractedText);
+  //     console.log("Document created with extracted text");
+
+  //     Alert.alert("Success", "Document uploaded and text extracted successfully");
+
+  //     router.replace("/library");
+  //   } catch (error) {
+  //     console.error("Upload error:", error);
+  //     let errorMessage = "Document upload failed";
+
+  //     if (error.message.includes("File extension not allowed")) {
+  //       errorMessage = error.message; // Use the detailed message with supported formats
+  //     } else if (error.message.includes("network request failed") || error.message.includes("Network request failed")) {
+  //       errorMessage = "Network issue. Please check your connection and try again.";
+  //     } else if (error.message.includes("timeout")) {
+  //       errorMessage = "Upload timed out. File might be too large.";
+  //     } else if (error.message.includes("text extraction") || error.message.includes("API request failed")) {
+  //       errorMessage = "Failed to extract text: " + error.message;
+  //     } else if (error.message.includes("Failed to extract")) {
+  //       errorMessage = error.message; // Use the specific extraction error
+  //     }
+
+  //     Alert.alert("Error", errorMessage);
+  //   } finally {
+  //     setUploading(false);
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
+
+
+  const handleFileUpload = async () => {
+    try {
+      setIsSubmitting(true);
+      setUploading(true);
+
+      const allowedExtensions = [
+        "pdf", "doc", "docx", "xlsx", "xls", "csv", "txt",
+        "rtf", "xml", "json", "html", "htm", "md", "markdown"
+      ];
+
+      const allowedMimeTypes = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "text/csv",
+        "text/plain",
+        "application/rtf",
+        "application/xml",
+        "text/xml",
+        "application/json",
+        "text/html",
+        "text/markdown"
+      ];
+
+      const result = await DocumentPicker.getDocumentAsync({
+        type: allowedMimeTypes,
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.assets || result.assets.length === 0) {
+        console.log("No file selected");
+        return;
+      }
+
+      const file = result.assets[0];
+      console.log("Selected file:", file.name);
+
+      const fileExtension = file.name.split(".").pop().toLowerCase();
+
+      if (!allowedExtensions.includes(fileExtension)) {
+        throw new Error(`File extension not allowed: .${fileExtension}. Supported formats: ${allowedExtensions.join(', ')}`);
+      }
+
+      const fileData = {
+        name: file.name,
+        uri: file.uri,
+        type: file.mimeType,
+        size: file.size,
+      };
+
+      // Extract text only - no file upload
+      console.log("Starting text extraction...");
+      const { extractedText } = await extractTextFromFile(fileData);
+      console.log("Text extracted successfully");
+
+      // Create document record with extracted text only
+      await createDocument(file, user.$id, extractedText);
+      console.log("Document created with extracted text");
+
+      Alert.alert("Success", "Document text extracted and saved successfully");
+      router.replace("/library");
+
+    } catch (error) {
+      console.error("Processing error:", error);
+      let errorMessage = "Document processing failed";
+
+      if (error.message.includes("File extension not allowed")) {
+        errorMessage = error.message;
+      } else if (error.message.includes("network request failed")) {
+        errorMessage = "Network issue. Please check your connection and try again.";
+      } else if (error.message.includes("timeout")) {
+        errorMessage = "Processing timed out. File might be too large.";
+      } else if (error.message.includes("text extraction")) {
+        errorMessage = "Failed to extract text: " + error.message;
+      }
+
+      Alert.alert("Error", errorMessage);
+    } finally {
+      setUploading(false);
+      setIsSubmitting(false);
     }
-
-    const file = result.assets[0];
-    console.log("Selected file:", file.name);
-    console.log("File MIME Type:", file?.mimeType);
-
-    // Extract file extension
-    const fileExtension = file.name.split(".").pop().toLowerCase();
-
-    // Validate file extension
-    if (!allowedExtensions.includes(fileExtension)) {
-      throw new Error(`File extension not allowed: .${fileExtension}. Supported formats: ${allowedExtensions.join(', ')}`);
-    }
-
-    // Prepare file data for upload
-    const fileData = {
-      name: file.name,
-      uri: file.uri,
-      type: file.mimeType,
-      size: file.size,
-    };
-
-    // Upload and extract text using Netlify API
-    console.log("Starting file upload and text extraction...");
-    const { extractedText, fileUrl } = await extractTextFromFile(fileData);
-    console.log("File uploaded and text extracted successfully");
-
-    if (!fileUrl) {
-      throw new Error("File upload failed: No file URL returned");
-    }
-
-    // Create document record in Appwrite Database with extracted text
-    await createDocument(file, user.$id, fileUrl, extractedText);
-    console.log("Document created with extracted text");
-
-    Alert.alert("Success", "Document uploaded and text extracted successfully");
-
-    router.replace("/library");
-  } catch (error) {
-    console.error("Upload error:", error);
-    let errorMessage = "Document upload failed";
-
-    if (error.message.includes("File extension not allowed")) {
-      errorMessage = error.message; // Use the detailed message with supported formats
-    } else if (error.message.includes("network request failed") || error.message.includes("Network request failed")) {
-      errorMessage = "Network issue. Please check your connection and try again.";
-    } else if (error.message.includes("timeout")) {
-      errorMessage = "Upload timed out. File might be too large.";
-    } else if (error.message.includes("text extraction") || error.message.includes("API request failed")) {
-      errorMessage = "Failed to extract text: " + error.message;
-    } else if (error.message.includes("Failed to extract")) {
-      errorMessage = error.message; // Use the specific extraction error
-    }
-
-    Alert.alert("Error", errorMessage);
-  } finally {
-    setUploading(false);
-    setIsSubmitting(false);
-  }
-};
-
+  };
 
 
   const handleUrl = async () => {
