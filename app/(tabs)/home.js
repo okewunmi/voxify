@@ -330,89 +330,93 @@ const home = () => {
 
 
   const handleFileUpload = async () => {
-    try {
-      setIsSubmitting(true);
-      setUploading(true);
+  try {
+    setIsSubmitting(true);
+    setUploading(true);
 
-      const allowedExtensions = [
-        "pdf", "doc", "docx", "xlsx", "xls", "csv", "txt",
-        "rtf", "xml", "json", "html", "htm", "md", "markdown"
-      ];
+    const allowedExtensions = [
+      "pdf", "doc", "docx", "xlsx", "xls", "csv", "txt",
+      "rtf", "xml", "json", "html", "htm", "md", "markdown"
+    ];
 
-      const allowedMimeTypes = [
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "application/vnd.ms-excel",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "text/csv",
-        "text/plain",
-        "application/rtf",
-        "application/xml",
-        "text/xml",
-        "application/json",
-        "text/html",
-        "text/markdown"
-      ];
+    const allowedMimeTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "text/csv",
+      "text/plain",
+      "application/rtf",
+      "application/xml",
+      "text/xml",
+      "application/json",
+      "text/html",
+      "text/markdown"
+    ];
 
-      const result = await DocumentPicker.getDocumentAsync({
-        type: allowedMimeTypes,
-        copyToCacheDirectory: true,
-      });
+    const result = await DocumentPicker.getDocumentAsync({
+      type: allowedMimeTypes,
+      copyToCacheDirectory: true,
+    });
 
-      if (!result.assets || result.assets.length === 0) {
-        console.log("No file selected");
-        return;
-      }
-
-      const file = result.assets[0];
-      console.log("Selected file:", file.name);
-
-      const fileExtension = file.name.split(".").pop().toLowerCase();
-
-      if (!allowedExtensions.includes(fileExtension)) {
-        throw new Error(`File extension not allowed: .${fileExtension}. Supported formats: ${allowedExtensions.join(', ')}`);
-      }
-
-      const fileData = {
-        name: file.name,
-        uri: file.uri,
-        type: file.mimeType,
-        size: file.size,
-      };
-
-      // Extract text only - no file upload
-      console.log("Starting text extraction...");
-      const { extractedText } = await extractTextFromFile(fileData);
-      console.log("Text extracted successfully");
-
-      // Create document record with extracted text only
-      await createDocument(file, user.$id, extractedText);
-      console.log("Document created with extracted text");
-
-      Alert.alert("Success", "Document text extracted and saved successfully");
-      router.replace("/library");
-
-    } catch (error) {
-      console.error("Processing error:", error);
-      let errorMessage = "Document processing failed";
-
-      if (error.message.includes("File extension not allowed")) {
-        errorMessage = error.message;
-      } else if (error.message.includes("network request failed")) {
-        errorMessage = "Network issue. Please check your connection and try again.";
-      } else if (error.message.includes("timeout")) {
-        errorMessage = "Processing timed out. File might be too large.";
-      } else if (error.message.includes("text extraction")) {
-        errorMessage = "Failed to extract text: " + error.message;
-      }
-
-      Alert.alert("Error", errorMessage);
-    } finally {
-      setUploading(false);
-      setIsSubmitting(false);
+    if (!result.assets || result.assets.length === 0) {
+      console.log("No file selected");
+      return;
     }
-  };
+
+    const file = result.assets[0];
+    // console.log("Selected file:", file.name);
+
+    const fileExtension = file.name.split(".").pop().toLowerCase();
+
+    if (!allowedExtensions.includes(fileExtension)) {
+      throw new Error(`File extension not allowed: .${fileExtension}. Supported formats: ${allowedExtensions.join(', ')}`);
+    }
+
+    const fileData = {
+      name: file.name,
+      uri: file.uri,
+      type: file.mimeType,
+      size: file.size,
+    };
+
+    // Extract text and get file info
+    // console.log("Starting text extraction...");
+    const { extractedText, fileUrl } = await extractTextFromFile(fileData);
+    // console.log("Text extracted successfully");
+    // console.log("FileUrl received:", fileUrl);
+
+    // Create document record with correct parameters
+    await createDocument(file, user.$id, fileUrl, extractedText);
+    // console.log("Document created successfully");
+
+    Alert.alert("Success", "Document processed and saved successfully");
+    router.replace("/library");
+
+  } catch (error) {
+    // console.error("Processing error:", error);
+    let errorMessage = "Document processing failed";
+
+    if (error.message.includes("File extension not allowed")) {
+      errorMessage = error.message;
+    } else if (error.message.includes("network request failed")) {
+      errorMessage = "Network issue. Please check your connection and try again.";
+    } else if (error.message.includes("timeout")) {
+      errorMessage = "Processing timed out. File might be too large.";
+    } else if (error.message.includes("text extraction")) {
+      errorMessage = "Failed to extract text: " + error.message;
+    } else if (error.message.includes("FileUrl is corrupted")) {
+      errorMessage = "File URL generation failed. Please try again.";
+    }
+
+    Alert.alert("Error", errorMessage);
+  } finally {
+    setUploading(false);
+    setIsSubmitting(false);
+  }
+};
+
 
 
   const handleUrl = async () => {

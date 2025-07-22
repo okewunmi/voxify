@@ -112,60 +112,210 @@ const ScanScreen = () => {
     }
   };
 
+  // const handleContinue = async () => {
+  //   if (!user) return Alert.alert("User not loaded");
+  //   setLoading(true);
+
+  //   try {
+  //     for (const uri of images) {
+  //       const formData = new FormData();
+  //       formData.append("apikey", "K85326546888957");
+  //       formData.append("language", "eng");
+  //       formData.append("isOverlayRequired", "false");
+
+  //       // Convert local image to blob
+  //       const imageBlob = {
+  //         uri,
+  //         name: "image.jpg",
+  //         type: "image/jpeg",
+  //       };
+
+  //       formData.append("file", imageBlob);
+
+  //       const response = await fetch("https://api.ocr.space/parse/image", {
+  //         method: "POST",
+  //         body: formData,
+  //         headers: {
+  //           Accept: "application/json",
+  //         },
+  //       });
+
+  //       const result = await response.json();
+
+  //       if (
+  //         result &&
+  //         result.ParsedResults &&
+  //         result.ParsedResults.length > 0
+  //       ) {
+  //         const extractedText = result.ParsedResults[0].ParsedText;
+  //         await createScanDoc(user.$id, uri, extractedText.trim());
+  //       } else {
+  //         throw new Error("No text found in image.");
+  //       }
+  //     }
+
+  //     Alert.alert("Success", "Images processed and saved.");
+  //     clearImages();
+  //     setShowPreview(false);
+  //     router.replace("/library");
+  //   } catch (error) {
+  //     console.error("OCR error", error);
+  //     Alert.alert("Error", "OCR failed: " + error.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  
   const handleContinue = async () => {
-    if (!user) return Alert.alert("User not loaded");
-    setLoading(true);
+  if (!user) return Alert.alert("User not loaded");
+  setLoading(true);
 
-    try {
-      for (const uri of images) {
-        const formData = new FormData();
-        formData.append("apikey", "K85326546888957");
-        formData.append("language", "eng");
-        formData.append("isOverlayRequired", "false");
+  // API keys array - replace dummy keys with your real ones
+  const apiKeys = [
+    "K85326546888957", 
+    "K82071167688957", 
+    "K89242712488957"  
+  ];
 
-        // Convert local image to blob
-        const imageBlob = {
-          uri,
-          name: "image.jpg",
-          type: "image/jpeg",
-        };
+  let currentKeyIndex = 0;
+  let requestCount = 0;
+  const maxRequestsPerKey = 500;
+  let allExtractedTexts = []; // Array to store text from each image
+  let processedImages = []; // Array to store URIs of successfully processed images
 
-        formData.append("file", imageBlob);
+  try {
+    // Process each image individually
+    for (let i = 0; i < images.length; i++) {
+      const uri = images[i];
+      let success = false;
+      let attempts = 0;
 
-        const response = await fetch("https://api.ocr.space/parse/image", {
-          method: "POST",
-          body: formData,
-          headers: {
-            Accept: "application/json",
-          },
-        });
+      // Try each API key if the current one fails
+      while (!success && attempts < apiKeys.length) {
+        try {
+          // Switch to next API key if current one has reached limit
+          if (requestCount >= maxRequestsPerKey) {
+            currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
+            requestCount = 0;
+            console.log(`Switching to API key ${currentKeyIndex + 1}`);
+          }
 
-        const result = await response.json();
+          const formData = new FormData();
+          formData.append("apikey", apiKeys[currentKeyIndex]);
+          formData.append("language", "eng");
+          formData.append("isOverlayRequired", "false");
 
-        if (
-          result &&
-          result.ParsedResults &&
-          result.ParsedResults.length > 0
-        ) {
-          const extractedText = result.ParsedResults[0].ParsedText;
-          await createScanDoc(user.$id, uri, extractedText.trim());
-        } else {
-          throw new Error("No text found in image.");
+          // Convert local image to blob
+          const imageBlob = {
+            uri,
+            name: `image_${i}.jpg`,
+            type: "image/jpeg",
+          };
+
+          formData.append("file", imageBlob);
+
+          console.log(`Processing image ${i + 1}/${images.length} with API key ${currentKeyIndex + 1}`);
+
+          const response = await fetch("https://api.ocr.space/parse/image", {
+            method: "POST",
+            body: formData,
+            headers: {
+              Accept: "application/json",
+            },
+          });
+
+          const result = await response.json();
+
+          // Check for API limit exceeded error
+          if (result.OCRExitCode === 6 || (result.ErrorMessage && result.ErrorMessage.includes("limit"))) {
+            console.log(`API key ${currentKeyIndex + 1} limit reached, switching to next key`);
+            currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
+            requestCount = 0;
+            attempts++;
+            continue;
+          }
+
+          if (
+            result &&
+            result.ParsedResults &&
+            result.ParsedResults.length > 0
+          ) {
+            const extractedText = result.ParsedResults[0].ParsedText;
+            
+            if (extractedText && extractedText.trim()) {
+              // Store the extracted text and image URI
+              allExtractedTexts.push({
+                imageIndex: i + 1,
+                text: extractedText.trim(),
+                uri: uri
+              });
+              processedImages.push(uri);
+              
+              console.log(`Successfully extracted text from image ${i + 1}`);
+              success = true;
+              requestCount++;
+            } else {
+              console.log(`No text found in image ${i + 1}, but continuing with other images`);
+              success = true; // Continue processing other images
+              requestCount++;
+            }
+          } else {
+            throw new Error(`Failed to process image ${i + 1}: ${result.ErrorMessage || 'Unknown error'}`);
+          }
+
+        } catch (apiError) {
+          console.error(`Error with API key ${currentKeyIndex + 1} for image ${i + 1}:`, apiError.message);
+          
+          // If it's a network error or API limit, try next key
+          if (apiError.message.includes("limit") || apiError.message.includes("Network") || attempts === 0) {
+            currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
+            requestCount = 0;
+            attempts++;
+          } else {
+            // If it's an image-specific error, skip to next image
+            console.log(`Skipping image ${i + 1} due to processing error: ${apiError.message}`);
+            break;
+          }
         }
       }
 
-      Alert.alert("Success", "Images processed and saved.");
-      clearImages();
-      setShowPreview(false);
-      router.replace("/library");
-    } catch (error) {
-      console.error("OCR error", error);
-      Alert.alert("Error", "OCR failed: " + error.message);
-    } finally {
-      setLoading(false);
+      if (!success && attempts >= apiKeys.length) {
+        console.error(`Failed to process image ${i + 1} with all API keys`);
+      }
     }
-  };
 
+    // Merge all extracted texts
+    if (allExtractedTexts.length > 0) {
+      // Create a combined text with page separators
+      const mergedText = allExtractedTexts
+        .map(item => `--- Page ${item.imageIndex} ---\n${item.text}`)
+        .join('\n\n');
+
+      // Create a single document with all the merged text
+      // Use the first image URI as reference, or you could create a combined name
+      const firstImageUri = processedImages[0];
+      await createScanDoc(user.$id, firstImageUri, mergedText);
+
+      Alert.alert(
+        "Success", 
+        `${allExtractedTexts.length} images processed and text merged into one document.`
+      );
+    } else {
+      Alert.alert("Warning", "No text could be extracted from any images.");
+    }
+
+    clearImages();
+    setShowPreview(false);
+    router.replace("/library");
+
+  } catch (error) {
+    console.error("OCR error", error);
+    Alert.alert("Error", "OCR failed: " + error.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleCancel = () => {
     clearImages();
