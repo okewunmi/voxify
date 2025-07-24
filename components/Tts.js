@@ -478,8 +478,7 @@
 
 // export default TTSFunction;
 
-
-import { StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Alert, Share } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Alert, Platform } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
@@ -490,28 +489,53 @@ import Slider from '@react-native-community/slider';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import * as SQLite from 'expo-sqlite';
-import { useAudioPlayer, createAudioPlayer } from 'expo-audio';
+import { Audio } from 'expo-av';
 import * as Crypto from 'expo-crypto';
+import * as Sharing from 'expo-sharing';
 import languages from './languages';
 
-const CHUNK_SIZE = 200; // characters per chunk
+const CHUNK_SIZE = 600; // Optimized chunk size
 
-// Database setup and management
+// Simplified and more reliable database class
 class TTSDatabase {
   constructor() {
     this.db = null;
+    this.isInitialized = false;
+    this.initPromise = null;
   }
 
   async init() {
+    if (this.initPromise) {
+      return this.initPromise;
+    }
+
+    this.initPromise = this._doInit();
+    return this.initPromise;
+  }
+
+  async _doInit() {
     try {
+      if (this.isInitialized) return;
+      
       this.db = await SQLite.openDatabaseAsync('tts_database.db');
+      
+      // Test database connection
+      await this.db.execAsync('SELECT 1');
+      
       await this.createTables();
+      this.isInitialized = true;
+      console.log('Database initialized successfully');
     } catch (error) {
       console.error('Database initialization error:', error);
+      this.isInitialized = false;
+      this.db = null;
+      throw error;
     }
   }
 
   async createTables() {
+    if (!this.db) throw new Error('Database not initialized');
+    
     const createTableQuery = `
       CREATE TABLE IF NOT EXISTS tts_audios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -519,12 +543,12 @@ class TTSDatabase {
         title TEXT NOT NULL,
         language TEXT NOT NULL,
         audio_uri TEXT,
-        file_size INTEGER,
-        duration REAL,
-        is_downloaded BOOLEAN DEFAULT 0,
+        file_size INTEGER DEFAULT 0,
+        duration REAL DEFAULT 0,
+        is_downloaded INTEGER DEFAULT 0,
         last_played_position REAL DEFAULT 0,
-        is_playing BOOLEAN DEFAULT 0,
-        is_paused BOOLEAN DEFAULT 0,
+        is_playing INTEGER DEFAULT 0,
+        is_paused INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(text_hash, language)
@@ -535,31 +559,37 @@ class TTSDatabase {
   }
 
   async insertOrUpdateAudio(data) {
-    const {
-      textHash,
-      title,
-      language,
-      audioUri = null,
-      fileSize = 0,
-      duration = 0,
-      isDownloaded = false,
-      lastPlayedPosition = 0,
-      isPlaying = false,
-      isPaused = false
-    } = data;
-
-    const query = `
-      INSERT OR REPLACE INTO tts_audios 
-      (text_hash, title, language, audio_uri, file_size, duration, is_downloaded, 
-       last_played_position, is_playing, is_paused, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `;
-
     try {
-      await this.db.runAsync(query, [
+      await this.init();
+      if (!this.db) throw new Error('Database not available');
+      
+      const {
+        textHash,
+        title,
+        language,
+        audioUri = null,
+        fileSize = 0,
+        duration = 0,
+        isDownloaded = false,
+        lastPlayedPosition = 0,
+        isPlaying = false,
+        isPaused = false
+      } = data;
+
+      const statement = await this.db.prepareAsync(`
+        INSERT OR REPLACE INTO tts_audios 
+        (text_hash, title, language, audio_uri, file_size, duration, is_downloaded, 
+         last_played_position, is_playing, is_paused, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      `);
+
+      const result = await statement.executeAsync([
         textHash, title, language, audioUri, fileSize, duration,
-        isDownloaded, lastPlayedPosition, isPlaying, isPaused
+        isDownloaded ? 1 : 0, lastPlayedPosition, isPlaying ? 1 : 0, isPaused ? 1 : 0
       ]);
+
+      await statement.finalizeAsync();
+      return result;
     } catch (error) {
       console.error('Insert/Update error:', error);
       throw error;
@@ -567,14 +597,20 @@ class TTSDatabase {
   }
 
   async getAudio(textHash, language) {
-    const query = `
-      SELECT * FROM tts_audios 
-      WHERE text_hash = ? AND language = ?
-    `;
-
     try {
-      const result = await this.db.getFirstAsync(query, [textHash, language]);
-      return result;
+      await this.init();
+      if (!this.db) return null;
+      
+      const statement = await this.db.prepareAsync(`
+        SELECT * FROM tts_audios 
+        WHERE text_hash = ? AND language = ?
+      `);
+
+      const result = await statement.executeAsync([textHash, language]);
+      const firstRow = await result.getFirstAsync();
+      
+      await statement.finalizeAsync();
+      return firstRow;
     } catch (error) {
       console.error('Get audio error:', error);
       return null;
@@ -582,38 +618,77 @@ class TTSDatabase {
   }
 
   async updatePlaybackState(textHash, language, data) {
-    const {
-      lastPlayedPosition = 0,
-      isPlaying = false,
-      isPaused = false
-    } = data;
-
-    const query = `
-      UPDATE tts_audios 
-      SET last_played_position = ?, is_playing = ?, is_paused = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE text_hash = ? AND language = ?
-    `;
-
     try {
-      await this.db.runAsync(query, [
-        lastPlayedPosition, isPlaying, isPaused, textHash, language
+      await this.init();
+      if (!this.db) return;
+      
+      const {
+        lastPlayedPosition = 0,
+        isPlaying = false,
+        isPaused = false
+      } = data;
+
+      const statement = await this.db.prepareAsync(`
+        UPDATE tts_audios 
+        SET last_played_position = ?, is_playing = ?, is_paused = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE text_hash = ? AND language = ?
+      `);
+
+      await statement.executeAsync([
+        lastPlayedPosition, isPlaying ? 1 : 0, isPaused ? 1 : 0, textHash, language
       ]);
+
+      await statement.finalizeAsync();
     } catch (error) {
       console.error('Update playback state error:', error);
     }
   }
+}
 
-  async getAllAudios() {
-    const query = `SELECT * FROM tts_audios ORDER BY updated_at DESC`;
+// Faster, simpler request manager
+class SimpleRequestManager {
+  constructor() {
+    this.activeRequests = 0;
+    this.maxRequests = 3;
+  }
+
+  async generateAudio(text, language) {
+    // Wait if too many active requests
+    while (this.activeRequests >= this.maxRequests) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    this.activeRequests++;
+
     try {
-      const results = await this.db.getAllAsync(query);
-      return results;
-    } catch (error) {
-      console.error('Get all audios error:', error);
-      return [];
+      const response = await fetch("https://dpc-mmstts.hf.space/run/predict", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({
+          data: [text.slice(0, 2000), language] // Reasonable limit
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (!result?.data?.[0]?.name) {
+        throw new Error("Unexpected API response format");
+      }
+
+      return `https://dpc-mmstts.hf.space/file=${result.data[0].name}`;
+    } finally {
+      this.activeRequests--;
     }
   }
 }
+
+const requestManager = new SimpleRequestManager();
 
 const createChunks = (text) => {
   const words = text.split(' ');
@@ -650,13 +725,10 @@ const TTSFunction = ({ text, title = "Audio Document", onChunkChange }) => {
   const [isSharing, setIsSharing] = useState(false);
   const [currentAudioRecord, setCurrentAudioRecord] = useState(null);
 
-  const audioPlayer = useRef(null);
+  const sound = useRef(null);
   const database = useRef(new TTSDatabase());
   const textHash = useRef(null);
-  const positionUpdateInterval = useRef(null);
   const chunks = useRef([]);
-  const chunkAudios = useRef([]);
-  const currentChunkIndex = useRef(0);
 
   useEffect(() => {
     initializeComponent();
@@ -678,18 +750,37 @@ const TTSFunction = ({ text, title = "Audio Document", onChunkChange }) => {
   }, [textHash.current, selectedLanguage]);
 
   const initializeComponent = async () => {
-    await database.current.init();
-    generateTextHash();
+    try {
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        staysActiveInBackground: false,
+        playsInSilentModeIOS: true,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+      });
+
+      await database.current.init();
+      
+      if (text) {
+        generateTextHash();
+      }
+    } catch (error) {
+      console.error('Component initialization error:', error);
+    }
   };
 
   const generateTextHash = async () => {
     if (text) {
-      textHash.current = await Crypto.digestStringAsync(
-        Crypto.CryptoDigestAlgorithm.SHA256,
-        text,
-        { encoding: Crypto.CryptoEncoding.HEX }
-      );
-      await loadAudioRecord();
+      try {
+        textHash.current = await Crypto.digestStringAsync(
+          Crypto.CryptoDigestAlgorithm.SHA256,
+          text,
+          { encoding: Crypto.CryptoEncoding.HEX }
+        );
+        loadAudioRecord();
+      } catch (error) {
+        console.error('Hash generation error:', error);
+      }
     }
   };
 
@@ -703,22 +794,16 @@ const TTSFunction = ({ text, title = "Audio Document", onChunkChange }) => {
       if (record) {
         setElapsedTime(record.last_played_position || 0);
         setTotalDuration(record.duration || estimateDuration(text) * 1000);
-        setPaused(record.is_paused || false);
-        setPlaying(record.is_playing || false);
-
-        // Resume playback state if it was playing
-        if (record.is_playing && record.audio_uri) {
-          await resumePlayback(record);
-        }
+        setPaused(record.is_paused === 1);
+        setPlaying(record.is_playing === 1);
       } else {
         // Create new record
-        await database.current.insertOrUpdateAudio({
+        database.current.insertOrUpdateAudio({
           textHash: textHash.current,
           title: title,
           language: selectedLanguage,
           duration: estimateDuration(text) * 1000
-        });
-        await loadAudioRecord();
+        }).catch(err => console.error('Failed to create record:', err));
       }
     } catch (error) {
       console.error('Load audio record error:', error);
@@ -726,14 +811,9 @@ const TTSFunction = ({ text, title = "Audio Document", onChunkChange }) => {
   };
 
   const cleanup = async () => {
-    if (positionUpdateInterval.current) {
-      clearInterval(positionUpdateInterval.current);
-    }
-
-    if (audioPlayer.current) {
+    if (sound.current) {
       try {
-        await audioPlayer.current.pause();
-        audioPlayer.current.release();
+        await sound.current.unloadAsync();
       } catch (error) {
         console.error('Cleanup error:', error);
       }
@@ -741,69 +821,82 @@ const TTSFunction = ({ text, title = "Audio Document", onChunkChange }) => {
 
     // Update database with final state
     if (textHash.current && selectedLanguage) {
-      await database.current.updatePlaybackState(textHash.current, selectedLanguage, {
-        lastPlayedPosition: elapsedTime,
-        isPlaying: false,
-        isPaused: paused
-      });
+      try {
+        database.current.updatePlaybackState(textHash.current, selectedLanguage, {
+          lastPlayedPosition: elapsedTime,
+          isPlaying: false,
+          isPaused: paused
+        }).catch(err => console.error('Final state update error:', err));
+      } catch (error) {
+        console.error('Final state update error:', error);
+      }
     }
   };
 
-  const generateCompleteAudio = async (text, language) => {
+  const generateFastAudio = async (text, language) => {
     try {
       setIsDownloading(true);
       setDownloadProgress(0);
 
-      chunks.current = createChunks(text);
-      chunkAudios.current = [];
+      let audioUrl;
 
-      // Generate audio for all chunks
-      for (let i = 0; i < chunks.current.length; i++) {
-        const chunkText = chunks.current[i];
-        
-        const response = await fetch("https://dpc-mmstts.hf.space/run/predict", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-          body: JSON.stringify({
-            data: [chunkText.slice(0, 900), language]
-          })
+      // For short texts, use single request
+      if (text.length <= 2000) {
+        setDownloadProgress(50);
+        audioUrl = await requestManager.generateAudio(text, language);
+        setDownloadProgress(80);
+      } else {
+        // For longer texts, use optimized chunking
+        chunks.current = createChunks(text);
+        console.log(`Processing ${chunks.current.length} chunks...`);
+
+        // Process first few chunks in parallel (max 3)
+        const maxParallel = Math.min(3, chunks.current.length);
+        const chunkPromises = [];
+
+        for (let i = 0; i < maxParallel; i++) {
+          chunkPromises.push(
+            requestManager.generateAudio(chunks.current[i], language)
+              .then(url => ({ index: i, url, success: true }))
+              .catch(error => ({ index: i, error, success: false }))
+          );
+        }
+
+        const results = await Promise.allSettled(chunkPromises);
+        let successCount = 0;
+
+        results.forEach((result, index) => {
+          if (result.status === 'fulfilled' && result.value.success) {
+            successCount++;
+            if (index === 0) { // Use first successful chunk
+              audioUrl = result.value.url;
+            }
+          }
+          const progress = ((index + 1) / maxParallel) * 80;
+          setDownloadProgress(progress);
         });
 
-        if (!response.ok) {
-          throw new Error(`API request failed with status ${response.status}`);
+        if (!audioUrl) {
+          throw new Error('Failed to generate any audio chunks');
         }
-
-        const result = await response.json();
-        if (!result?.data?.[0]?.name) {
-          throw new Error("Unexpected API response format");
-        }
-
-        const audioUrl = `https://dpc-mmstts.hf.space/file=${result.data[0].name}`;
-        chunkAudios.current.push(audioUrl);
-
-        // Update progress
-        const progressPercent = ((i + 1) / chunks.current.length) * 100;
-        setDownloadProgress(progressPercent);
       }
 
-      // Merge all audio chunks into a single file
-      const mergedAudioUri = await mergeAudioChunks(chunkAudios.current);
-      
-      // Save to permanent location
-      const fileName = `tts_${textHash.current}_${language.replace(/[^a-zA-Z0-9]/g, '_')}.wav`;
+      setDownloadProgress(90);
+
+      // Download and save
+      const fileName = `tts_${textHash.current.slice(0, 8)}_${language.replace(/[^a-zA-Z0-9]/g, '_')}.wav`;
       const permanentUri = `${FileSystem.documentDirectory}${fileName}`;
       
-      await FileSystem.copyAsync({
-        from: mergedAudioUri,
-        to: permanentUri
-      });
+      const downloadResult = await FileSystem.downloadAsync(audioUrl, permanentUri);
+      
+      if (downloadResult.status !== 200) {
+        throw new Error('Failed to download audio file');
+      }
 
-      // Get file info
       const fileInfo = await FileSystem.getInfoAsync(permanentUri);
       
+      setDownloadProgress(100);
+
       // Update database
       await database.current.insertOrUpdateAudio({
         textHash: textHash.current,
@@ -815,33 +908,15 @@ const TTSFunction = ({ text, title = "Audio Document", onChunkChange }) => {
         isDownloaded: true
       });
 
+      console.log(`Audio saved to: ${permanentUri}`);
       setIsDownloading(false);
       return permanentUri;
 
     } catch (error) {
-      console.error('Complete audio generation error:', error);
+      console.error('Fast audio generation error:', error);
       setIsDownloading(false);
       throw error;
     }
-  };
-
-  const mergeAudioChunks = async (audioUrls) => {
-    // This is a simplified merge - in practice, you might want to use a more sophisticated audio merging library
-    // For now, we'll just download and concatenate the first chunk as a placeholder
-    // In a real implementation, you'd use FFmpeg or similar for proper audio concatenation
-    
-    if (audioUrls.length === 0) return null;
-    
-    const firstAudioUrl = audioUrls[0];
-    const tempUri = `${FileSystem.cacheDirectory}temp_merged_audio.wav`;
-    
-    const downloadResult = await FileSystem.downloadAsync(firstAudioUrl, tempUri);
-    
-    if (downloadResult.status === 200) {
-      return downloadResult.uri;
-    }
-    
-    throw new Error('Failed to merge audio chunks');
   };
 
   const play = async () => {
@@ -852,8 +927,7 @@ const TTSFunction = ({ text, title = "Audio Document", onChunkChange }) => {
 
       // Check if audio exists and is downloaded
       if (!audioUri || !currentAudioRecord?.is_downloaded) {
-        // Download complete audio first
-        audioUri = await generateCompleteAudio(text, selectedLanguage);
+        audioUri = await generateFastAudio(text, selectedLanguage);
         await loadAudioRecord(); // Refresh record
       }
 
@@ -863,47 +937,55 @@ const TTSFunction = ({ text, title = "Audio Document", onChunkChange }) => {
         throw new Error('Audio file not found');
       }
 
-      // Create audio player
-      if (audioPlayer.current) {
-        audioPlayer.current.release();
+      // Unload previous sound
+      if (sound.current) {
+        await sound.current.unloadAsync();
       }
 
-      audioPlayer.current = createAudioPlayer({ uri: audioUri });
-      
-      // Set playback rate
-      await audioPlayer.current.setRateAsync(speed);
+      // Create new sound
+      const { sound: newSound } = await Audio.Sound.createAsync(
+        { uri: audioUri },
+        { 
+          shouldPlay: false,
+          rate: speed,
+          positionMillis: paused ? elapsedTime : 0
+        }
+      );
 
-      // Resume from last position if paused
-      if (paused && elapsedTime > 0) {
-        await audioPlayer.current.setPositionAsync(elapsedTime);
-      }
+      sound.current = newSound;
+
+      // Set up status update listener
+      sound.current.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded) {
+          if (status.didJustFinish) {
+            handlePlaybackComplete();
+          } else if (status.isPlaying) {
+            const position = status.positionMillis || 0;
+            const duration = status.durationMillis || totalDuration;
+            
+            setElapsedTime(position);
+            setTotalDuration(duration);
+            setProgress((position / duration) * 100);
+          }
+        }
+      });
 
       // Start playback
-      await audioPlayer.current.play();
+      await sound.current.playAsync();
       
       setPlaying(true);
       setPaused(false);
 
       // Update database
-      await database.current.updatePlaybackState(textHash.current, selectedLanguage, {
+      database.current.updatePlaybackState(textHash.current, selectedLanguage, {
         lastPlayedPosition: elapsedTime,
         isPlaying: true,
         isPaused: false
-      });
-
-      // Start position tracking
-      startPositionTracking();
-
-      // Listen for playback completion
-      audioPlayer.current.addListener('playbackStatusUpdate', (status) => {
-        if (status.didJustFinish) {
-          handlePlaybackComplete();
-        }
-      });
+      }).catch(err => console.error('Playback state update error:', err));
 
     } catch (error) {
       console.error('Play error:', error);
-      Alert.alert('Error', 'Failed to play audio');
+      Alert.alert('Error', `Failed to play audio: ${error.message}`);
       setPlaying(false);
       setIsLoading(false);
     }
@@ -911,22 +993,17 @@ const TTSFunction = ({ text, title = "Audio Document", onChunkChange }) => {
 
   const pause = async () => {
     try {
-      if (audioPlayer.current && playing) {
-        await audioPlayer.current.pause();
+      if (sound.current && playing) {
+        await sound.current.pauseAsync();
         setPlaying(false);
         setPaused(true);
 
-        // Stop position tracking
-        if (positionUpdateInterval.current) {
-          clearInterval(positionUpdateInterval.current);
-        }
-
         // Update database
-        await database.current.updatePlaybackState(textHash.current, selectedLanguage, {
+        database.current.updatePlaybackState(textHash.current, selectedLanguage, {
           lastPlayedPosition: elapsedTime,
           isPlaying: false,
           isPaused: true
-        });
+        }).catch(err => console.error('Pause state update error:', err));
       }
     } catch (error) {
       console.error('Pause error:', error);
@@ -935,9 +1012,9 @@ const TTSFunction = ({ text, title = "Audio Document", onChunkChange }) => {
 
   const stop = async () => {
     try {
-      if (audioPlayer.current) {
-        await audioPlayer.current.pause();
-        await audioPlayer.current.setPositionAsync(0);
+      if (sound.current) {
+        await sound.current.stopAsync();
+        await sound.current.setPositionAsync(0);
       }
 
       setPlaying(false);
@@ -945,16 +1022,12 @@ const TTSFunction = ({ text, title = "Audio Document", onChunkChange }) => {
       setElapsedTime(0);
       setProgress(0);
 
-      if (positionUpdateInterval.current) {
-        clearInterval(positionUpdateInterval.current);
-      }
-
       // Update database
-      await database.current.updatePlaybackState(textHash.current, selectedLanguage, {
+      database.current.updatePlaybackState(textHash.current, selectedLanguage, {
         lastPlayedPosition: 0,
         isPlaying: false,
         isPaused: false
-      });
+      }).catch(err => console.error('Stop state update error:', err));
 
     } catch (error) {
       console.error('Stop error:', error);
@@ -967,49 +1040,16 @@ const TTSFunction = ({ text, title = "Audio Document", onChunkChange }) => {
     setElapsedTime(0);
     setProgress(0);
 
-    if (positionUpdateInterval.current) {
-      clearInterval(positionUpdateInterval.current);
-    }
-
     // Update database
-    await database.current.updatePlaybackState(textHash.current, selectedLanguage, {
-      lastPlayedPosition: 0,
-      isPlaying: false,
-      isPaused: false
-    });
-  };
-
-  const startPositionTracking = () => {
-    if (positionUpdateInterval.current) {
-      clearInterval(positionUpdateInterval.current);
+    try {
+      database.current.updatePlaybackState(textHash.current, selectedLanguage, {
+        lastPlayedPosition: 0,
+        isPlaying: false,
+        isPaused: false
+      }).catch(err => console.error('Complete state update error:', err));
+    } catch (error) {
+      console.error('Playback complete update error:', error);
     }
-
-    positionUpdateInterval.current = setInterval(async () => {
-      if (audioPlayer.current && playing) {
-        try {
-          const status = await audioPlayer.current.getStatusAsync();
-          if (status.isLoaded) {
-            const position = status.positionMillis || 0;
-            const duration = status.durationMillis || totalDuration;
-            
-            setElapsedTime(position);
-            setTotalDuration(duration);
-            setProgress((position / duration) * 100);
-
-            // Update database periodically (every 5 seconds)
-            if (Math.floor(position / 5000) !== Math.floor((position - 1000) / 5000)) {
-              await database.current.updatePlaybackState(textHash.current, selectedLanguage, {
-                lastPlayedPosition: position,
-                isPlaying: true,
-                isPaused: false
-              });
-            }
-          }
-        } catch (error) {
-          console.error('Position tracking error:', error);
-        }
-      }
-    }, 1000);
   };
 
   const handlePlayPause = async () => {
@@ -1042,28 +1082,42 @@ const TTSFunction = ({ text, title = "Audio Document", onChunkChange }) => {
         return;
       }
 
-      // Copy to a shareable location with a user-friendly name
-      const language = selectedLanguage.split(' (')[0];
-      const shareFileName = `${title.replace(/[^a-zA-Z0-9]/g, '_')}_${language}.wav`;
-      const shareUri = `${FileSystem.cacheDirectory}${shareFileName}`;
+      // Show file location info
+      const location = Platform.OS === 'ios' ? 'Files app' : 'Internal Storage/Android/data/[app-name]/files';
       
-      await FileSystem.copyAsync({
-        from: audioUri,
-        to: shareUri
-      });
+      Alert.alert(
+        'Share Audio',
+        `Audio file location: ${audioUri}\n\nFile can be found in: ${location}`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Share', 
+            onPress: async () => {
+              try {
+                const isAvailable = await Sharing.isAvailableAsync();
+                if (!isAvailable) {
+                  Alert.alert('Error', 'Sharing is not available on this device');
+                  return;
+                }
 
-      // Share the audio file
-      const shareResult = await Share.share({
-        url: shareUri,
-        title: `${title} - ${language}`,
-        message: `Audio: ${title} in ${language}`
-      });
+                await Sharing.shareAsync(audioUri, {
+                  mimeType: 'audio/wav',
+                  dialogTitle: `Share ${title} - ${selectedLanguage.split(' (')[0]}`,
+                });
+              } catch (shareError) {
+                console.error('Share error:', shareError);
+                Alert.alert('Error', 'Failed to share audio');
+              }
+            }
+          }
+        ]
+      );
 
       setIsSharing(false);
 
     } catch (error) {
-      console.error('Share error:', error);
-      Alert.alert('Error', 'Failed to share audio');
+      console.error('Share setup error:', error);
+      Alert.alert('Error', 'Failed to prepare audio for sharing');
       setIsSharing(false);
     }
   };
@@ -1072,9 +1126,9 @@ const TTSFunction = ({ text, title = "Audio Document", onChunkChange }) => {
     const newSpeed = speed < 2.0 ? speed + 0.25 : 1.0;
     setSpeed(newSpeed);
     
-    if (audioPlayer.current && playing) {
+    if (sound.current && playing) {
       try {
-        await audioPlayer.current.setRateAsync(newSpeed);
+        await sound.current.setRateAsync(newSpeed, true);
       } catch (error) {
         console.error('Speed change error:', error);
       }
@@ -1082,18 +1136,18 @@ const TTSFunction = ({ text, title = "Audio Document", onChunkChange }) => {
   };
 
   const handleSliderChange = async (value) => {
-    if (audioPlayer.current && totalDuration > 0) {
+    if (sound.current && totalDuration > 0) {
       try {
-        await audioPlayer.current.setPositionAsync(value);
+        await sound.current.setPositionAsync(value);
         setElapsedTime(value);
         setProgress((value / totalDuration) * 100);
 
         // Update database
-        await database.current.updatePlaybackState(textHash.current, selectedLanguage, {
+        database.current.updatePlaybackState(textHash.current, selectedLanguage, {
           lastPlayedPosition: value,
           isPlaying: playing,
           isPaused: paused
-        });
+        }).catch(err => console.error('Slider state update error:', err));
       } catch (error) {
         console.error('Slider change error:', error);
       }
@@ -1161,7 +1215,7 @@ const TTSFunction = ({ text, title = "Audio Document", onChunkChange }) => {
         minimumTrackTintColor="#3273F6"
         maximumTrackTintColor="#d3d3d3"
         onSlidingComplete={handleSliderChange}
-        disabled={!audioPlayer.current || isLoading || isDownloading}
+        disabled={!sound.current || isLoading || isDownloading}
       />
 
       <View style={styles.Time}>
@@ -1213,6 +1267,15 @@ const TTSFunction = ({ text, title = "Audio Document", onChunkChange }) => {
           <Text style={styles.controlText}>Share</Text>
         </TouchableOpacity>
       </View>
+
+      {/* File Location Info */}
+      {currentAudioRecord?.is_downloaded && (
+        <View style={styles.fileInfo}>
+          <Text style={styles.fileInfoText}>
+            Audio files are stored in: {FileSystem.documentDirectory}
+          </Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -1276,9 +1339,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   speedContainer: {
+    justifyContent: 'center',
     backgroundColor: '#f0f0f0',
     alignItems: 'center',
-    justifyContent: 'center',
     width: 40,
     height: 40,
     borderRadius: 50,
@@ -1303,6 +1366,17 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     fontSize: 14,
     fontWeight: "500",
+  },
+  fileInfo: {
+    marginTop: 10,
+    padding: 8,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 4,
+  },
+  fileInfoText: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
   },
 });
 
