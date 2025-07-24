@@ -1269,13 +1269,13 @@ const TTSFunction = ({ text, title = "Audio Document", onChunkChange }) => {
       </View>
 
       {/* File Location Info */}
-      {currentAudioRecord?.is_downloaded && (
+      {/* {currentAudioRecord?.is_downloaded && (
         <View style={styles.fileInfo}>
           <Text style={styles.fileInfoText}>
             Audio files are stored in: {FileSystem.documentDirectory}
           </Text>
         </View>
-      )}
+      )} */}
     </View>
   );
 };
