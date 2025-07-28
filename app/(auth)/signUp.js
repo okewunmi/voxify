@@ -143,10 +143,11 @@ const signUp = () => {
 
         <View style={styles.other}>
           <View style={styles.line}></View>
-          <Text style={styles.othertext}>or continue with</Text>
+          {/* <Text style={styles.othertext}>or continue with</Text> */}
         </View>
       </View>
-      <View style={styles.icons}>
+
+      {/* <View style={styles.icons}>
         <TouchableOpacity style={styles.icon}>
           <View style={styles.group}>
             <AntDesign name="google" size={22} color="black" />
@@ -167,7 +168,8 @@ const signUp = () => {
             <FontAwesome6 name="x-twitter" size={22} color="black" />
           </View>
         </TouchableOpacity>
-      </View>
+      </View> */}
+      
       <View style={styles.sign}>
         <TouchableOpacity
           style={styles.signbtn}
@@ -223,7 +225,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     width: 320,
     padding: 12,
-    marginTop: 70,
+    marginTop: 50,
   },
   signTxt: {
     color: "#fff",
