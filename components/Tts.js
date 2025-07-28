@@ -63,7 +63,7 @@
 //   const [totalDuration, setTotalDuration] = useState(1);
 //   const [progress, setProgress] = useState(0);
 //   const [isDownloading, setIsDownloading] = useState(false);
-  
+
 //   // Refs for audio management
 //   const chunks = useRef([]);
 //   const chunkAudios = useRef({});
@@ -96,10 +96,10 @@
 //         const chunkDuration = estimatedDuration / chunks.current.length;
 //         const currentChunkElapsed = (Date.now() - chunkStartTime.current) / 1000;
 //         const currentTotalElapsed = totalElapsedTime.current + currentChunkElapsed;
-        
+
 //         setElapsedTime(currentTotalElapsed * 1000); // Convert to milliseconds for slider
 //         setProgress((currentTotalElapsed / estimatedDuration) * 100);
-        
+
 //         // Update chunk change callback
 //         onChunkChange?.(currentIndex.current);
 //       }
@@ -122,9 +122,9 @@
 //     totalElapsedTime.current = 0;
 //     chunkStartTime.current = 0;
 //     preloadQueue.current.clear();
-    
+
 //     stopProgressTracking();
-    
+
 //     // Clean up current player
 //     if (currentPlayer.current) {
 //       try {
@@ -134,7 +134,7 @@
 //       }
 //       currentPlayer.current = null;
 //     }
-    
+
 //     setElapsedTime(0);
 //     setProgress(0);
 //   };
@@ -143,7 +143,7 @@
 //     try {
 //       shouldStop.current = true;
 //       stopProgressTracking();
-      
+
 //       if (currentPlayer.current) {
 //         await currentPlayer.current.pause();
 //         currentPlayer.current.release();
@@ -179,7 +179,7 @@
 //       }
 
 //       const result = await response.json();
-      
+
 //       if (!result?.data?.[0]?.name) {
 //         throw new Error("Unexpected API response format");
 //       }
@@ -194,7 +194,7 @@
 //   // Aggressive preloading strategy
 //   const preloadNextChunks = async (startIndex, count = 3) => {
 //     const loadPromises = [];
-    
+
 //     for (let i = startIndex; i < Math.min(startIndex + count, chunks.current.length); i++) {
 //       if (!chunkAudios.current[i] && !preloadQueue.current.has(i)) {
 //         preloadQueue.current.add(i);
@@ -210,7 +210,7 @@
 //         })());
 //       }
 //     }
-    
+
 //     if (loadPromises.length > 0) {
 //       await Promise.all(loadPromises);
 //     }
@@ -232,7 +232,7 @@
 
 //     isPlayingChunk.current = true;
 //     const chunkIndex = currentIndex.current;
-    
+
 //     try {
 //       // Wait for current chunk audio if not ready
 //       let attempts = 0;
@@ -260,7 +260,7 @@
 //       const player = createAudioPlayer({ 
 //         uri: chunkAudios.current[chunkIndex]
 //       });
-      
+
 //       currentPlayer.current = player;
 
 //       // Try to set playback rate using different possible methods
@@ -290,10 +290,10 @@
 //         // Update elapsed time
 //         const chunkDuration = estimateDuration(chunks.current[chunkIndex]) / chunks.current.length;
 //         totalElapsedTime.current += chunkDuration;
-        
+
 //         isPlayingChunk.current = false;
 //         currentIndex.current++;
-        
+
 //         // Immediately play next chunk or finish
 //         if (currentIndex.current < chunks.current.length) {
 //           // Start aggressive preloading
@@ -318,17 +318,17 @@
 
 //       // Start playback
 //       await player.play();
-      
+
 //       // Ensure UI shows playing state
 //       if (!playing) {
 //         setPlaying(true);
 //       }
-      
+
 //       // Start progress tracking if not already started
 //       if (!progressInterval.current) {
 //         startProgressTracking();
 //       }
-      
+
 //       // Aggressive preloading of upcoming chunks
 //       if (chunkIndex + 1 < chunks.current.length) {
 //         preloadNextChunks(chunkIndex + 1, 4);
@@ -362,16 +362,16 @@
 
 //       // Aggressive initial preloading
 //       await preloadNextChunks(0, 5);
-      
+
 //       setIsLoading(false);
 //       currentIndex.current = 0;
-      
+
 //       // Start progress tracking
 //       startProgressTracking();
-      
+
 //       // Start playback immediately
 //       playNextChunk();
-      
+
 //     } catch (error) {
 //       console.error("Speech generation error:", error);
 //       Alert.alert("Error", "Failed to generate speech");
@@ -436,7 +436,7 @@
 //   const increaseSpeed = async () => {
 //     const newSpeed = speed < 2.0 ? speed + 0.25 : 1.0;
 //     setSpeed(newSpeed);
-    
+
 //     // If currently playing, try to update the current player's speed
 //     if (playing && currentPlayer.current) {
 //       try {
@@ -454,7 +454,7 @@
 //           currentPlayer.current.release();
 //           currentPlayer.current = null;
 //           isPlayingChunk.current = false;
-          
+
 //           setTimeout(() => {
 //             playNextChunk();
 //           }, 100);
@@ -510,11 +510,11 @@
 //             const chunkDuration = estimatedDuration / chunks.current.length;
 //             const newChunkIndex = Math.floor((value / 1000) / chunkDuration);
 //             const targetIndex = Math.min(Math.max(0, newChunkIndex), chunks.current.length - 1);
-            
+
 //             if (targetIndex !== currentIndex.current) {
 //               currentIndex.current = targetIndex;
 //               totalElapsedTime.current = targetIndex * chunkDuration;
-              
+
 //               // Stop current playback and start from new position
 //               if (currentPlayer.current) {
 //                 await currentPlayer.current.pause();
@@ -653,21 +653,21 @@
 
 
 
-import React, { useState, useEffect, useRef } from "react";
-import { StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Alert } from "react-native";
-import { FontAwesome, FontAwesome6, MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Picker } from '@react-native-picker/picker';
+import { FontAwesome, FontAwesome6, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import Slider from '@react-native-community/slider';
+import { Picker } from '@react-native-picker/picker';
+import { createAudioPlayer } from 'expo-audio';
+import * as Crypto from 'expo-crypto';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
-import { createAudioPlayer } from 'expo-audio';
 import * as SQLite from 'expo-sqlite';
-import * as Crypto from 'expo-crypto';
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 // Fallback languages array in case the import fails
 const defaultLanguages = [
   "English (eng)",
-  "Spanish (spa)", 
+  "Spanish (spa)",
   "French (fra)",
   "German (deu)",
   "Italian (ita)",
@@ -719,10 +719,10 @@ class AudioCacheDB {
 
   async init() {
     if (this.initialized) return;
-    
+
     try {
       this.db = await SQLite.openDatabaseAsync('audio_cache.db');
-      
+
       await this.db.execAsync(`
         CREATE TABLE IF NOT EXISTS audio_cache (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -738,9 +738,9 @@ class AudioCacheDB {
         CREATE INDEX IF NOT EXISTS idx_text_hash_lang ON audio_cache(text_hash, language);
         CREATE INDEX IF NOT EXISTS idx_created_at ON audio_cache(created_at);
       `);
-      
+
       this.initialized = true;
-      
+
       // Clean old cache entries (older than 7 days)
       const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
       await this.cleanOldEntries(weekAgo);
@@ -756,13 +756,13 @@ class AudioCacheDB {
 
   async getCachedAudio(textHash, language, chunkIndex) {
     if (!this.initialized) await this.init();
-    
+
     try {
       const result = await this.db.getFirstAsync(
         'SELECT audio_uri, file_path FROM audio_cache WHERE text_hash = ? AND language = ? AND chunk_index = ?',
         [textHash, language, chunkIndex]
       );
-      
+
       if (result) {
         // Check if file still exists
         const fileInfo = await FileSystem.getInfoAsync(result.file_path);
@@ -773,7 +773,7 @@ class AudioCacheDB {
           await this.removeCachedAudio(textHash, language, chunkIndex);
         }
       }
-      
+
       return null;
     } catch (error) {
       console.error('Error getting cached audio:', error);
@@ -783,32 +783,32 @@ class AudioCacheDB {
 
   async cacheAudio(textHash, language, chunkIndex, audioUri) {
     if (!this.initialized) await this.init();
-    
+
     try {
       // Download and save audio file
       const fileName = `audio_${textHash}_${language}_${chunkIndex}.wav`;
       const filePath = `${FileSystem.documentDirectory}audio_cache/${fileName}`;
-      
+
       // Ensure directory exists
       const dirPath = `${FileSystem.documentDirectory}audio_cache/`;
       const dirInfo = await FileSystem.getInfoAsync(dirPath);
       if (!dirInfo.exists) {
         await FileSystem.makeDirectoryAsync(dirPath, { intermediates: true });
       }
-      
+
       // Download audio file
       const downloadResult = await FileSystem.downloadAsync(audioUri, filePath);
-      
+
       if (downloadResult.status === 200) {
         // Save to database
         await this.db.runAsync(
           'INSERT OR REPLACE INTO audio_cache (text_hash, language, chunk_index, audio_uri, file_path, created_at) VALUES (?, ?, ?, ?, ?, ?)',
           [textHash, language, chunkIndex, audioUri, filePath, Date.now()]
         );
-        
+
         return filePath;
       }
-      
+
       return null;
     } catch (error) {
       console.error('Error caching audio:', error);
@@ -818,7 +818,7 @@ class AudioCacheDB {
 
   async removeCachedAudio(textHash, language, chunkIndex) {
     if (!this.initialized) await this.init();
-    
+
     try {
       await this.db.runAsync(
         'DELETE FROM audio_cache WHERE text_hash = ? AND language = ? AND chunk_index = ?',
@@ -831,14 +831,14 @@ class AudioCacheDB {
 
   async cleanOldEntries(beforeTimestamp) {
     if (!this.initialized) await this.init();
-    
+
     try {
       // Get old entries to delete their files
       const oldEntries = await this.db.getAllAsync(
         'SELECT file_path FROM audio_cache WHERE created_at < ?',
         [beforeTimestamp]
       );
-      
+
       // Delete files
       for (const entry of oldEntries) {
         try {
@@ -850,7 +850,7 @@ class AudioCacheDB {
           console.warn('Error deleting old cache file:', error);
         }
       }
-      
+
       // Remove from database
       await this.db.runAsync('DELETE FROM audio_cache WHERE created_at < ?', [beforeTimestamp]);
     } catch (error) {
@@ -860,13 +860,13 @@ class AudioCacheDB {
 
   async getAllCachedChunks(textHash, language) {
     if (!this.initialized) await this.init();
-    
+
     try {
       const results = await this.db.getAllAsync(
         'SELECT chunk_index, file_path FROM audio_cache WHERE text_hash = ? AND language = ? ORDER BY chunk_index',
         [textHash, language]
       );
-      
+
       const cachedChunks = {};
       for (const result of results) {
         // Verify file exists
@@ -875,7 +875,7 @@ class AudioCacheDB {
           cachedChunks[result.chunk_index] = result.file_path;
         }
       }
-      
+
       return cachedChunks;
     } catch (error) {
       console.error('Error getting all cached chunks:', error);
@@ -895,7 +895,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
   const [progress, setProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [cacheStatus, setCacheStatus] = useState('');
-  
+
   // Refs for audio management
   const chunks = useRef([]);
   const chunkAudios = useRef({});
@@ -914,7 +914,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
   useEffect(() => {
     // Initialize database
     audioCacheDB.current.init();
-    
+
     return () => {
       cleanup();
     };
@@ -957,10 +957,10 @@ const TTSFunction = ({ text, onChunkChange }) => {
         const chunkDuration = estimatedDuration / chunks.current.length;
         const currentChunkElapsed = (Date.now() - chunkStartTime.current) / 1000;
         const currentTotalElapsed = totalElapsedTime.current + currentChunkElapsed;
-        
+
         setElapsedTime(currentTotalElapsed * 1000);
         setProgress((currentTotalElapsed / estimatedDuration) * 100);
-        
+
         onChunkChange?.(currentIndex.current);
       }
     }, 100);
@@ -983,10 +983,10 @@ const TTSFunction = ({ text, onChunkChange }) => {
     chunkStartTime.current = 0;
     pausedPosition.current = 0;
     preloadQueue.current.clear();
-    
+
     stopProgressTracking();
     cleanup();
-    
+
     setElapsedTime(0);
     setProgress(0);
     setPaused(false);
@@ -996,7 +996,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
     try {
       shouldStop.current = true;
       stopProgressTracking();
-      
+
       if (currentPlayer.current) {
         await currentPlayer.current.pause();
         currentPlayer.current.release();
@@ -1019,7 +1019,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
         await currentPlayer.current.pause();
         setPaused(true);
         stopProgressTracking();
-        
+
         // Save current position
         const chunkDuration = estimateDuration(text) / chunks.current.length;
         const currentChunkElapsed = (Date.now() - chunkStartTime.current) / 1000;
@@ -1035,7 +1035,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
       if (currentPlayer.current && playing && paused) {
         // Update start time to account for paused duration
         chunkStartTime.current = Date.now() - (pausedPosition.current * 1000);
-        
+
         await currentPlayer.current.play();
         setPaused(false);
         startProgressTracking();
@@ -1066,7 +1066,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
       }
 
       const result = await response.json();
-      
+
       if (!result?.data?.[0]?.name) {
         throw new Error("Unexpected API response format");
       }
@@ -1081,18 +1081,18 @@ const TTSFunction = ({ text, onChunkChange }) => {
   const getOrGenerateAudio = async (chunkText, chunkIndex) => {
     // Check cache first
     const cachedPath = await audioCacheDB.current.getCachedAudio(
-      textHash.current, 
-      selectedLanguage, 
+      textHash.current,
+      selectedLanguage,
       chunkIndex
     );
-    
+
     if (cachedPath) {
       return `file://${cachedPath}`;
     }
-    
+
     // Generate new audio
     const audioUrl = await generateAudioFromText(chunkText);
-    
+
     // Cache the audio
     const cachedFilePath = await audioCacheDB.current.cacheAudio(
       textHash.current,
@@ -1100,13 +1100,13 @@ const TTSFunction = ({ text, onChunkChange }) => {
       chunkIndex,
       audioUrl
     );
-    
+
     return cachedFilePath ? `file://${cachedFilePath}` : audioUrl;
   };
 
   const preloadNextChunks = async (startIndex, count = 3) => {
     const loadPromises = [];
-    
+
     for (let i = startIndex; i < Math.min(startIndex + count, chunks.current.length); i++) {
       if (!chunkAudios.current[i] && !preloadQueue.current.has(i)) {
         preloadQueue.current.add(i);
@@ -1122,7 +1122,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
         })());
       }
     }
-    
+
     if (loadPromises.length > 0) {
       await Promise.all(loadPromises);
     }
@@ -1142,7 +1142,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
 
     isPlayingChunk.current = true;
     const chunkIndex = currentIndex.current;
-    
+
     try {
       // Wait for current chunk audio if not ready
       let attempts = 0;
@@ -1166,10 +1166,10 @@ const TTSFunction = ({ text, onChunkChange }) => {
       }
 
       // Create new player
-      const player = createAudioPlayer({ 
+      const player = createAudioPlayer({
         uri: chunkAudios.current[chunkIndex]
       });
-      
+
       currentPlayer.current = player;
 
       // Try to set playback rate
@@ -1194,10 +1194,10 @@ const TTSFunction = ({ text, onChunkChange }) => {
 
         const chunkDuration = estimateDuration(chunks.current[chunkIndex]) / chunks.current.length;
         totalElapsedTime.current += chunkDuration;
-        
+
         isPlayingChunk.current = false;
         currentIndex.current++;
-        
+
         if (currentIndex.current < chunks.current.length) {
           preloadNextChunks(currentIndex.current + 1, 4);
           setImmediate(() => playNextChunk());
@@ -1217,15 +1217,15 @@ const TTSFunction = ({ text, onChunkChange }) => {
       player.addListener('playbackStatusUpdate', statusListener);
 
       await player.play();
-      
+
       if (!playing) {
         setPlaying(true);
       }
-      
+
       if (!progressInterval.current) {
         startProgressTracking();
       }
-      
+
       if (chunkIndex + 1 < chunks.current.length) {
         preloadNextChunks(chunkIndex + 1, 4);
       }
@@ -1240,15 +1240,15 @@ const TTSFunction = ({ text, onChunkChange }) => {
 
   const checkCacheStatus = async () => {
     if (!textHash.current) return;
-    
+
     const cachedChunks = await audioCacheDB.current.getAllCachedChunks(
-      textHash.current, 
+      textHash.current,
       selectedLanguage
     );
-    
+
     const totalChunks = chunks.current.length;
     const cachedCount = Object.keys(cachedChunks).length;
-    
+
     if (cachedCount === totalChunks) {
       setCacheStatus('Fully cached');
     } else if (cachedCount > 0) {
@@ -1256,7 +1256,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
     } else {
       setCacheStatus('Not cached');
     }
-    
+
     return cachedChunks;
   };
 
@@ -1285,7 +1285,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
 
       // Check cache status
       const cachedChunks = await checkCacheStatus();
-      
+
       // Load cached chunks
       for (const [index, filePath] of Object.entries(cachedChunks)) {
         chunkAudios.current[parseInt(index)] = `file://${filePath}`;
@@ -1293,13 +1293,13 @@ const TTSFunction = ({ text, onChunkChange }) => {
 
       // Preload first few chunks (cached or generate new)
       await preloadNextChunks(0, 5);
-      
+
       setIsLoading(false);
       currentIndex.current = 0;
-      
+
       startProgressTracking();
       playNextChunk();
-      
+
     } catch (error) {
       console.error("Speech generation error:", error);
       Alert.alert("Error", "Failed to generate speech");
@@ -1369,7 +1369,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
   const increaseSpeed = async () => {
     const newSpeed = speed < 2.0 ? speed + 0.25 : 1.0;
     setSpeed(newSpeed);
-    
+
     if (playing && currentPlayer.current && !paused) {
       try {
         if (typeof currentPlayer.current.setRate === 'function') {
@@ -1384,7 +1384,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
           currentPlayer.current.release();
           currentPlayer.current = null;
           isPlayingChunk.current = false;
-          
+
           setTimeout(() => {
             playNextChunk();
           }, 100);
@@ -1446,11 +1446,11 @@ const TTSFunction = ({ text, onChunkChange }) => {
             const chunkDuration = estimatedDuration / chunks.current.length;
             const newChunkIndex = Math.floor((value / 1000) / chunkDuration);
             const targetIndex = Math.min(Math.max(0, newChunkIndex), chunks.current.length - 1);
-            
+
             if (targetIndex !== currentIndex.current) {
               currentIndex.current = targetIndex;
               totalElapsedTime.current = targetIndex * chunkDuration;
-              
+
               if (currentPlayer.current) {
                 await currentPlayer.current.pause();
               }
@@ -1595,7 +1595,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     fontSize: 14,
     fontWeight: "500",
-    },
- });
+  },
+});
 
 export default TTSFunction;
