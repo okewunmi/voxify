@@ -2829,8 +2829,6 @@
 
 
 
-
-
 // import { FontAwesome, FontAwesome6, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 // import Slider from '@react-native-community/slider';
 // import { Picker } from '@react-native-picker/picker';
@@ -2838,33 +2836,9 @@
 // import * as Crypto from 'expo-crypto';
 // import * as FileSystem from 'expo-file-system';
 // import * as MediaLibrary from 'expo-media-library';
-// import * as Notifications from 'expo-notifications';
 // import * as SQLite from 'expo-sqlite';
-// import * as TaskManager from 'expo-task-manager';
 // import { useEffect, useRef, useState } from "react";
-// import { ActivityIndicator, Alert, AppState, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-
-// // Configure notifications
-// Notifications.setNotificationHandler({
-//   handleNotification: async () => ({
-//     shouldShowAlert: true,
-//     shouldPlaySound: false,
-//     shouldSetBadge: false,
-//   }),
-// });
-
-// // Background task for audio
-// const BACKGROUND_AUDIO_TASK = 'background-audio-task';
-
-// TaskManager.defineTask(BACKGROUND_AUDIO_TASK, () => {
-//   try {
-//     // Background audio task logic
-//     return { success: true };
-//   } catch (error) {
-//     console.error('Background task error:', error);
-//     return { success: false };
-//   }
-// });
+// import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 // // Fallback languages array in case the import fails
 // const defaultLanguages = [
@@ -2917,16 +2891,29 @@
 //   constructor() {
 //     this.db = null;
 //     this.initialized = false;
+//     this.initPromise = null;
 //   }
 
 //   async init() {
 //     if (this.initialized) return;
+//     if (this.initPromise) return this.initPromise;
 
+//     this.initPromise = this._initDatabase();
+//     return this.initPromise;
+//   }
+
+//   async _initDatabase() {
 //     try {
+//       // Use the new async API
 //       this.db = await SQLite.openDatabaseAsync('audio_cache.db');
 
-//       // First create the table if it doesn't exist
+//       if (!this.db) {
+//         throw new Error('Failed to open database');
+//       }
+
+//       // Create tables with proper error handling
 //       await this.db.execAsync(`
+//         PRAGMA journal_mode = WAL;
 //         CREATE TABLE IF NOT EXISTS audio_cache (
 //           id INTEGER PRIMARY KEY AUTOINCREMENT,
 //           text_hash TEXT NOT NULL,
@@ -2935,71 +2922,68 @@
 //           audio_uri TEXT NOT NULL,
 //           file_path TEXT NOT NULL,
 //           created_at INTEGER NOT NULL,
+//           is_cached INTEGER DEFAULT 0,
 //           UNIQUE(text_hash, language, chunk_index)
 //         );
 //       `);
 
-//       // Check if is_cached column exists, if not add it
+//       // Create indexes separately to avoid issues
 //       try {
-//         const tableInfo = await this.db.getAllAsync("PRAGMA table_info(audio_cache)");
-//         const hasIsCachedColumn = tableInfo.some(column => column.name === 'is_cached');
-        
-//         if (!hasIsCachedColumn) {
-//           await this.db.execAsync(`ALTER TABLE audio_cache ADD COLUMN is_cached INTEGER DEFAULT 1`);
-//           console.log('Added is_cached column to existing table');
-//         }
-//       } catch (alterError) {
-//         console.log('Column migration completed or not needed');
+//         await this.db.execAsync('CREATE INDEX IF NOT EXISTS idx_text_hash_lang ON audio_cache(text_hash, language);');
+//         await this.db.execAsync('CREATE INDEX IF NOT EXISTS idx_created_at ON audio_cache(created_at);');
+//         await this.db.execAsync('CREATE INDEX IF NOT EXISTS idx_is_cached ON audio_cache(is_cached);');
+//       } catch (indexError) {
+//         console.warn('Index creation warning:', indexError);
+//         // Continue even if indexes fail
 //       }
 
-//       // Create indexes
-//       await this.db.execAsync(`
-//         CREATE INDEX IF NOT EXISTS idx_text_hash_lang ON audio_cache(text_hash, language);
-//         CREATE INDEX IF NOT EXISTS idx_created_at ON audio_cache(created_at);
-//         CREATE INDEX IF NOT EXISTS idx_is_cached ON audio_cache(is_cached);
-//       `);
-
 //       this.initialized = true;
+//       console.log('Database initialized successfully');
 
 //       // Clean old cache entries (older than 7 days)
 //       const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
 //       await this.cleanOldEntries(weekAgo);
 //     } catch (error) {
 //       console.error('Failed to initialize database:', error);
+//       this.initialized = false;
+//       this.db = null;
+//       throw error;
 //     }
 //   }
 
 //   async generateTextHash(text, language) {
-//     const combined = `${text}_${language}`;
-//     return await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.MD5, combined);
+//     try {
+//       const combined = `${text}_${language}`;
+//       return await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.MD5, combined);
+//     } catch (error) {
+//       console.error('Error generating hash:', error);
+//       // Fallback to simple hash
+//       return `${text.length}_${language}_${Date.now()}`;
+//     }
 //   }
 
 //   async getCachedAudio(textHash, language, chunkIndex) {
-//     if (!this.initialized) await this.init();
-
 //     try {
-//       // First try with is_cached column
-//       let result;
-//       try {
-//         result = await this.db.getFirstAsync(
-//           'SELECT audio_uri, file_path, is_cached FROM audio_cache WHERE text_hash = ? AND language = ? AND chunk_index = ? AND is_cached = 1',
-//           [textHash, language, chunkIndex]
-//         );
-//       } catch (columnError) {
-//         // Fallback for tables without is_cached column
-//         result = await this.db.getFirstAsync(
-//           'SELECT audio_uri, file_path FROM audio_cache WHERE text_hash = ? AND language = ? AND chunk_index = ?',
-//           [textHash, language, chunkIndex]
-//         );
-//       }
+//       await this.init();
+//       if (!this.db) return null;
+
+//       const result = await this.db.getFirstAsync(
+//         'SELECT audio_uri, file_path, is_cached FROM audio_cache WHERE text_hash = ? AND language = ? AND chunk_index = ? AND is_cached = 1',
+//         [textHash, language, chunkIndex]
+//       );
 
 //       if (result) {
 //         // Check if file still exists
-//         const fileInfo = await FileSystem.getInfoAsync(result.file_path);
-//         if (fileInfo.exists) {
-//           return result.file_path;
-//         } else {
-//           // File deleted, remove from cache
+//         try {
+//           const fileInfo = await FileSystem.getInfoAsync(result.file_path);
+//           if (fileInfo.exists) {
+//             return result.file_path;
+//           } else {
+//             // File deleted, remove from cache
+//             await this.removeCachedAudio(textHash, language, chunkIndex);
+//           }
+//         } catch (fileError) {
+//           console.warn('File check error:', fileError);
 //           await this.removeCachedAudio(textHash, language, chunkIndex);
 //         }
 //       }
@@ -3012,18 +2996,24 @@
 //   }
 
 //   async cacheAudio(textHash, language, chunkIndex, audioUri) {
-//     if (!this.initialized) await this.init();
-
 //     try {
+//       await this.init();
+//       if (!this.db) return null;
+
 //       // Download and save audio file
 //       const fileName = `audio_${textHash}_${language}_${chunkIndex}.wav`;
 //       const filePath = `${FileSystem.documentDirectory}audio_cache/${fileName}`;
 
 //       // Ensure directory exists
 //       const dirPath = `${FileSystem.documentDirectory}audio_cache/`;
-//       const dirInfo = await FileSystem.getInfoAsync(dirPath);
-//       if (!dirInfo.exists) {
-//         await FileSystem.makeDirectoryAsync(dirPath, { intermediates: true });
+//       try {
+//         const dirInfo = await FileSystem.getInfoAsync(dirPath);
+//         if (!dirInfo.exists) {
+//           await FileSystem.makeDirectoryAsync(dirPath, { intermediates: true });
+//         }
+//       } catch (dirError) {
+//         console.error('Directory creation error:', dirError);
+//         return null;
 //       }
 
 //       // Download audio file
@@ -3048,42 +3038,39 @@
 //   }
 
 //   async markAsUncached(textHash, language, chunkIndex) {
-//     if (!this.initialized) await this.init();
-
 //     try {
-//       // Try to update is_cached column if it exists
-//       try {
-//         await this.db.runAsync(
-//           'UPDATE audio_cache SET is_cached = 0 WHERE text_hash = ? AND language = ? AND chunk_index = ?',
-//           [textHash, language, chunkIndex]
-//         );
-//       } catch (columnError) {
-//         // If column doesn't exist, just delete the entry
-//         await this.db.runAsync(
-//           'DELETE FROM audio_cache WHERE text_hash = ? AND language = ? AND chunk_index = ?',
-//           [textHash, language, chunkIndex]
-//         );
-//       }
+//       await this.init();
+//       if (!this.db) return;
+
+//       await this.db.runAsync(
+//         'UPDATE audio_cache SET is_cached = 0 WHERE text_hash = ? AND language = ? AND chunk_index = ?',
+//         [textHash, language, chunkIndex]
+//       );
 //     } catch (error) {
 //       console.error('Error marking as uncached:', error);
 //     }
 //   }
 
 //   async removeCachedAudio(textHash, language, chunkIndex) {
-//     if (!this.initialized) await this.init();
-
 //     try {
+//       await this.init();
+//       if (!this.db) return;
+
 //       // Get file path before deleting
 //       const result = await this.db.getFirstAsync(
 //         'SELECT file_path FROM audio_cache WHERE text_hash = ? AND language = ? AND chunk_index = ?',
 //         [textHash, language, chunkIndex]
 //       );
 
-//       if (result) {
+//       if (result && result.file_path) {
 //         // Delete file if exists
-//         const fileInfo = await FileSystem.getInfoAsync(result.file_path);
-//         if (fileInfo.exists) {
-//           await FileSystem.deleteAsync(result.file_path);
+//         try {
+//           const fileInfo = await FileSystem.getInfoAsync(result.file_path);
+//           if (fileInfo.exists) {
+//             await FileSystem.deleteAsync(result.file_path);
+//           }
+//         } catch (fileError) {
+//           console.warn('File deletion error:', fileError);
 //         }
 //       }
 
@@ -3098,9 +3085,10 @@
 //   }
 
 //   async cleanOldEntries(beforeTimestamp) {
-//     if (!this.initialized) await this.init();
-
 //     try {
+//       await this.init();
+//       if (!this.db) return;
+
 //       // Get old entries to delete their files
 //       const oldEntries = await this.db.getAllAsync(
 //         'SELECT file_path FROM audio_cache WHERE created_at < ?',
@@ -3109,13 +3097,15 @@
 
 //       // Delete files
 //       for (const entry of oldEntries) {
-//         try {
-//           const fileInfo = await FileSystem.getInfoAsync(entry.file_path);
-//           if (fileInfo.exists) {
-//             await FileSystem.deleteAsync(entry.file_path);
+//         if (entry.file_path) {
+//           try {
+//             const fileInfo = await FileSystem.getInfoAsync(entry.file_path);
+//             if (fileInfo.exists) {
+//               await FileSystem.deleteAsync(entry.file_path);
+//             }
+//           } catch (error) {
+//             console.warn('Error deleting old cache file:', error);
 //           }
-//         } catch (error) {
-//           console.warn('Error deleting old cache file:', error);
 //         }
 //       }
 
@@ -3127,32 +3117,31 @@
 //   }
 
 //   async getAllCachedChunks(textHash, language) {
-//     if (!this.initialized) await this.init();
-
 //     try {
-//       let results;
-//       try {
-//         results = await this.db.getAllAsync(
-//           'SELECT chunk_index, file_path FROM audio_cache WHERE text_hash = ? AND language = ? AND is_cached = 1 ORDER BY chunk_index',
-//           [textHash, language]
-//         );
-//       } catch (columnError) {
-//         // Fallback for tables without is_cached column
-//         results = await this.db.getAllAsync(
-//           'SELECT chunk_index, file_path FROM audio_cache WHERE text_hash = ? AND language = ? ORDER BY chunk_index',
-//           [textHash, language]
-//         );
-//       }
+//       await this.init();
+//       if (!this.db) return {};
+
+//       const results = await this.db.getAllAsync(
+//         'SELECT chunk_index, file_path FROM audio_cache WHERE text_hash = ? AND language = ? AND is_cached = 1 ORDER BY chunk_index',
+//         [textHash, language]
+//       );
 
 //       const cachedChunks = {};
 //       for (const result of results) {
-//         // Verify file exists
-//         const fileInfo = await FileSystem.getInfoAsync(result.file_path);
-//         if (fileInfo.exists) {
-//           cachedChunks[result.chunk_index] = result.file_path;
-//         } else {
-//           // Mark as uncached if file doesn't exist
-//           await this.markAsUncached(textHash, language, result.chunk_index);
+//         if (result.file_path) {
+//           // Verify file exists
+//           try {
+//             const fileInfo = await FileSystem.getInfoAsync(result.file_path);
+//             if (fileInfo.exists) {
+//               cachedChunks[result.chunk_index] = result.file_path;
+//             } else {
+//               // Mark as uncached if file doesn't exist
+//               await this.markAsUncached(textHash, language, result.chunk_index);
+//             }
+//           } catch (fileError) {
+//             console.warn('File verification error:', fileError);
+//             await this.markAsUncached(textHash, language, result.chunk_index);
+//           }
 //         }
 //       }
 
@@ -3164,22 +3153,14 @@
 //   }
 
 //   async getCacheStats(textHash, language) {
-//     if (!this.initialized) await this.init();
-
 //     try {
-//       let result;
-//       try {
-//         result = await this.db.getFirstAsync(
-//           'SELECT COUNT(*) as total, SUM(is_cached) as cached FROM audio_cache WHERE text_hash = ? AND language = ?',
-//           [textHash, language]
-//         );
-//       } catch (columnError) {
-//         // Fallback for tables without is_cached column - assume all existing entries are cached
-//         result = await this.db.getFirstAsync(
-//           'SELECT COUNT(*) as total, COUNT(*) as cached FROM audio_cache WHERE text_hash = ? AND language = ?',
-//           [textHash, language]
-//         );
-//       }
+//       await this.init();
+//       if (!this.db) return { total: 0, cached: 0 };
+
+//       const result = await this.db.getFirstAsync(
+//         'SELECT COUNT(*) as total, SUM(is_cached) as cached FROM audio_cache WHERE text_hash = ? AND language = ?',
+//         [textHash, language]
+//       );
 
 //       return {
 //         total: result?.total || 0,
@@ -3220,26 +3201,18 @@
 //   const audioCacheDB = useRef(new AudioCacheDB());
 //   const textHash = useRef('');
 //   const pausedPosition = useRef(0);
-//   const appState = useRef(AppState.currentState);
-//   const notificationId = useRef(null);
 
 //   useEffect(() => {
 //     // Initialize audio and database
 //     initializeAudio();
-//     audioCacheDB.current.init();
-
-//     // App state listener
-//     const subscription = AppState.addEventListener('change', handleAppStateChange);
-
-//     // Notification response listener
-//     const notificationSubscription = Notifications.addNotificationResponseReceivedListener(
-//       handleNotificationResponse
-//     );
+    
+//     // Initialize database with error handling
+//     audioCacheDB.current.init().catch(error => {
+//       console.error('Database initialization failed:', error);
+//     });
 
 //     return () => {
 //       cleanup();
-//       subscription?.remove();
-//       notificationSubscription?.remove();
 //     };
 //   }, []);
 
@@ -3265,104 +3238,36 @@
 //     }
 //   };
 
-//   const handleAppStateChange = (nextAppState) => {
-//     console.log('App state changed:', appState.current, '->', nextAppState);
-    
-//     if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-//       // App has come to the foreground
-//       console.log('App came to foreground');
-//       if (notificationId.current) {
-//         Notifications.dismissNotificationAsync(notificationId.current);
-//         notificationId.current = null;
-//       }
-//     } else if (appState.current === 'active' && nextAppState.match(/inactive|background/)) {
-//       // App has gone to the background
-//       console.log('App went to background, playing:', playing);
-//       if (playing) {
-//         setTimeout(() => {
-//           showBackgroundNotification();
-//         }, 1000); // Delay to ensure app is fully backgrounded
-//       }
-//     }
-//     appState.current = nextAppState;
-//   };
-
-//   const showBackgroundNotification = async () => {
-//     try {
-//       const { status } = await Notifications.requestPermissionsAsync();
-//       if (status !== 'granted') {
-//         console.log('Notification permission not granted');
-//         return;
-//       }
-
-//       // Cancel any existing notification
-//       if (notificationId.current) {
-//         await Notifications.dismissNotificationAsync(notificationId.current);
-//       }
-
-//       const currentChunk = currentIndex.current + 1;
-//       const totalChunks = chunks.current.length;
-//       const statusText = paused ? 'Paused' : 'Playing';
-      
-//       const notification = await Notifications.scheduleNotificationAsync({
-//         content: {
-//           title: `TTS Audio ${statusText}`,
-//           body: `${statusText} chunk ${currentChunk}/${totalChunks}`,
-//           data: { 
-//             type: 'audio_control',
-//             action: paused ? 'resume' : 'pause'
-//           },
-//           sound: false,
-//           priority: Notifications.AndroidNotificationPriority.HIGH,
-//           sticky: true,
-//           autoDismiss: false,
-//         },
-//         trigger: null,
-//       });
-
-//       notificationId.current = notification;
-//       console.log('Background notification shown');
-//     } catch (error) {
-//       console.error('Error showing notification:', error);
-//     }
-//   };
-
-//   const handleNotificationResponse = (response) => {
-//     console.log('Notification response received:', response);
-//     // Handle notification interactions here
-//     if (response.notification.request.content.data?.type === 'audio_control') {
-//       const action = response.notification.request.content.data?.action;
-//       console.log('Notification action:', action);
-      
-//       // You can add logic here to handle play/pause from notification
-//       // For now, just dismiss the notification when tapped
-//       if (notificationId.current) {
-//         Notifications.dismissNotificationAsync(notificationId.current);
-//         notificationId.current = null;
-//       }
-//     }
-//   };
-
 //   const generateTextHashAsync = async () => {
 //     if (text) {
-//       const hash = await audioCacheDB.current.generateTextHash(text, selectedLanguage);
-//       textHash.current = hash;
-//       updateCacheStatus();
+//       try {
+//         const hash = await audioCacheDB.current.generateTextHash(text, selectedLanguage);
+//         textHash.current = hash;
+//         updateCacheStatus();
+//       } catch (error) {
+//         console.error('Error generating text hash:', error);
+//         textHash.current = `${text.length}_${selectedLanguage}_${Date.now()}`;
+//       }
 //     }
 //   };
 
 //   const updateCacheStatus = async () => {
 //     if (!textHash.current || !text) return;
 
-//     const textChunks = createChunks(text);
-//     const stats = await audioCacheDB.current.getCacheStats(textHash.current, selectedLanguage);
-    
-//     if (stats.cached === textChunks.length && textChunks.length > 0) {
-//       setCacheStatus('Fully cached');
-//     } else if (stats.cached > 0) {
-//       setCacheStatus(`${stats.cached}/${textChunks.length} cached`);
-//     } else {
-//       setCacheStatus('Not cached');
+//     try {
+//       const textChunks = createChunks(text);
+//       const stats = await audioCacheDB.current.getCacheStats(textHash.current, selectedLanguage);
+      
+//       if (stats.cached === textChunks.length && textChunks.length > 0) {
+//         setCacheStatus('Fully cached');
+//       } else if (stats.cached > 0) {
+//         setCacheStatus(`${stats.cached}/${textChunks.length} cached`);
+//       } else {
+//         setCacheStatus('Not cached');
+//       }
+//     } catch (error) {
+//       console.error('Error updating cache status:', error);
+//       setCacheStatus('Cache unavailable');
 //     }
 //   };
 
@@ -3375,10 +3280,6 @@
 //         console.error("Error during cleanup:", error);
 //       }
 //       currentSound.current = null;
-//     }
-//     if (notificationId.current) {
-//       await Notifications.dismissNotificationAsync(notificationId.current);
-//       notificationId.current = null;
 //     }
 //   };
 
@@ -3441,11 +3342,6 @@
 //         currentSound.current = null;
 //       }
 
-//       if (notificationId.current) {
-//         await Notifications.dismissNotificationAsync(notificationId.current);
-//         notificationId.current = null;
-//       }
-
 //       isPlayingChunk.current = false;
 //       setPlaying(false);
 //       setPaused(false);
@@ -3467,13 +3363,6 @@
 //         const chunkDuration = estimateDuration(text) / chunks.current.length;
 //         const currentChunkElapsed = (Date.now() - chunkStartTime.current) / 1000;
 //         pausedPosition.current = currentChunkElapsed;
-
-//         // Update notification if in background
-//         if (appState.current.match(/inactive|background/)) {
-//           setTimeout(() => {
-//             showBackgroundNotification();
-//           }, 500);
-//         }
 //       }
 //     } catch (error) {
 //       console.error("Pause playback error:", error);
@@ -3489,13 +3378,6 @@
 //         await currentSound.current.playAsync();
 //         setPaused(false);
 //         startProgressTracking();
-
-//         // Update notification if in background
-//         if (appState.current.match(/inactive|background/)) {
-//           setTimeout(() => {
-//             showBackgroundNotification();
-//           }, 500);
-//         }
 //       }
 //     } catch (error) {
 //       console.error("Resume playback error:", error);
@@ -3539,20 +3421,24 @@
 //     setLoadingMessage(`Loading audio chunk ${chunkIndex + 1}/${chunks.current.length}...`);
     
 //     // Check cache first
-//     const cachedPath = await audioCacheDB.current.getCachedAudio(
-//       textHash.current,
-//       selectedLanguage,
-//       chunkIndex
-//     );
+//     try {
+//       const cachedPath = await audioCacheDB.current.getCachedAudio(
+//         textHash.current,
+//         selectedLanguage,
+//         chunkIndex
+//       );
 
-//     if (cachedPath) {
-//       return `file://${cachedPath}`;
+//       if (cachedPath) {
+//         return `file://${cachedPath}`;
+//       }
+//     } catch (error) {
+//       console.warn('Cache check failed:', error);
 //     }
 
 //     // Generate new audio
 //     const audioUrl = await generateAudioFromText(chunkText);
 
-//     // Cache the audio in background
+//     // Cache the audio in background (don't wait for it)
 //     audioCacheDB.current.cacheAudio(
 //       textHash.current,
 //       selectedLanguage,
@@ -3561,6 +3447,8 @@
 //     ).then(() => {
 //       // Update cache status after caching
 //       updateCacheStatus();
+//     }).catch(error => {
+//       console.warn('Background caching failed:', error);
 //     });
 
 //     return audioUrl;
@@ -3597,10 +3485,6 @@
 //       setLoadingMessage('');
 //       isPlayingChunk.current = false;
 //       stopProgressTracking();
-//       if (notificationId.current) {
-//         await Notifications.dismissNotificationAsync(notificationId.current);
-//         notificationId.current = null;
-//       }
 //       return;
 //     }
 
@@ -3662,10 +3546,6 @@
 //             setIsPreparingAudio(false);
 //             setLoadingMessage('');
 //             stopProgressTracking();
-//             if (notificationId.current) {
-//               Notifications.dismissNotificationAsync(notificationId.current);
-//               notificationId.current = null;
-//             }
 //           }
 //         }
 //       };
@@ -3682,13 +3562,6 @@
 
 //       if (!progressInterval.current) {
 //         startProgressTracking();
-//       }
-
-//       // Show notification if in background
-//       if (appState.current.match(/inactive|background/)) {
-//         setTimeout(() => {
-//           showBackgroundNotification();
-//         }, 500);
 //       }
 
 //       if (chunkIndex + 1 < chunks.current.length) {
@@ -3738,14 +3611,18 @@
 //       setTotalDuration(estimatedDuration * 1000);
 
 //       // Check cache status
-//       const cachedChunks = await audioCacheDB.current.getAllCachedChunks(
-//         textHash.current,
-//         selectedLanguage
-//       );
+//       try {
+//         const cachedChunks = await audioCacheDB.current.getAllCachedChunks(
+//           textHash.current,
+//           selectedLanguage
+//         );
 
-//       // Load cached chunks
-//       for (const [index, filePath] of Object.entries(cachedChunks)) {
-//         chunkAudios.current[parseInt(index)] = `file://${filePath}`;
+//         // Load cached chunks
+//         for (const [index, filePath] of Object.entries(cachedChunks)) {
+//           chunkAudios.current[parseInt(index)] = `file://${filePath}`;
+//         }
+//       } catch (error) {
+//         console.warn('Cache loading failed:', error);
 //       }
 
 //       // Preload first few chunks (cached or generate new)
@@ -4150,6 +4027,7 @@
 
 // export default TTSFunction;
 
+
 import { FontAwesome, FontAwesome6, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import Slider from '@react-native-community/slider';
 import { Picker } from '@react-native-picker/picker';
@@ -4157,30 +4035,10 @@ import { Audio } from 'expo-av';
 import * as Crypto from 'expo-crypto';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
-import * as Notifications from 'expo-notifications';
 import * as SQLite from 'expo-sqlite';
-import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, AppState, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-
-// Configure notifications for media controls
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: false,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
-
-// Configure audio session for background playback
-Audio.setAudioModeAsync({
-  allowsRecordingIOS: false,
-  staysActiveInBackground: true,
-  playsInSilentModeIOS: true,
-  shouldDuckAndroid: true,
-  playThroughEarpieceAndroid: false,
-  interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
-  interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
-});
+import React, { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useFocusEffect } from '@react-navigation/native';
 
 // Fallback languages array in case the import fails
 const defaultLanguages = [
@@ -4233,16 +4091,29 @@ class AudioCacheDB {
   constructor() {
     this.db = null;
     this.initialized = false;
+    this.initPromise = null;
   }
 
   async init() {
     if (this.initialized) return;
+    if (this.initPromise) return this.initPromise;
 
+    this.initPromise = this._initDatabase();
+    return this.initPromise;
+  }
+
+  async _initDatabase() {
     try {
+      // Use the new async API
       this.db = await SQLite.openDatabaseAsync('audio_cache.db');
 
-      // First create the table if it doesn't exist
+      if (!this.db) {
+        throw new Error('Failed to open database');
+      }
+
+      // Create tables with proper error handling
       await this.db.execAsync(`
+        PRAGMA journal_mode = WAL;
         CREATE TABLE IF NOT EXISTS audio_cache (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           text_hash TEXT NOT NULL,
@@ -4251,165 +4122,68 @@ class AudioCacheDB {
           audio_uri TEXT NOT NULL,
           file_path TEXT NOT NULL,
           created_at INTEGER NOT NULL,
-          last_played_position INTEGER DEFAULT 0,
+          is_cached INTEGER DEFAULT 0,
           UNIQUE(text_hash, language, chunk_index)
         );
       `);
 
-      // Check if is_cached column exists, if not add it
+      // Create indexes separately to avoid issues
       try {
-        const tableInfo = await this.db.getAllAsync("PRAGMA table_info(audio_cache)");
-        const hasIsCachedColumn = tableInfo.some(column => column.name === 'is_cached');
-        const hasLastPlayedColumn = tableInfo.some(column => column.name === 'last_played_position');
-        
-        if (!hasIsCachedColumn) {
-          await this.db.execAsync(`ALTER TABLE audio_cache ADD COLUMN is_cached INTEGER DEFAULT 1`);
-          console.log('Added is_cached column to existing table');
-        }
-        
-        if (!hasLastPlayedColumn) {
-          await this.db.execAsync(`ALTER TABLE audio_cache ADD COLUMN last_played_position INTEGER DEFAULT 0`);
-          console.log('Added last_played_position column to existing table');
-        }
-      } catch (alterError) {
-        console.log('Column migration completed or not needed');
+        await this.db.execAsync('CREATE INDEX IF NOT EXISTS idx_text_hash_lang ON audio_cache(text_hash, language);');
+        await this.db.execAsync('CREATE INDEX IF NOT EXISTS idx_created_at ON audio_cache(created_at);');
+        await this.db.execAsync('CREATE INDEX IF NOT EXISTS idx_is_cached ON audio_cache(is_cached);');
+      } catch (indexError) {
+        console.warn('Index creation warning:', indexError);
+        // Continue even if indexes fail
       }
 
-      // Create indexes
-      await this.db.execAsync(`
-        CREATE INDEX IF NOT EXISTS idx_text_hash_lang ON audio_cache(text_hash, language);
-        CREATE INDEX IF NOT EXISTS idx_created_at ON audio_cache(created_at);
-        CREATE INDEX IF NOT EXISTS idx_is_cached ON audio_cache(is_cached);
-      `);
-
       this.initialized = true;
+      console.log('Database initialized successfully');
 
       // Clean old cache entries (older than 7 days)
       const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
       await this.cleanOldEntries(weekAgo);
     } catch (error) {
       console.error('Failed to initialize database:', error);
+      this.initialized = false;
+      this.db = null;
+      throw error;
     }
   }
 
   async generateTextHash(text, language) {
-    const combined = `${text}_${language}`;
-    return await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.MD5, combined);
-  }
-
-  async savePlaybackState(textHash, language, chunkIndex, position) {
-    if (!this.initialized) await this.init();
-
     try {
-      await this.db.runAsync(
-        'UPDATE audio_cache SET last_played_position = ? WHERE text_hash = ? AND language = ? AND chunk_index = ?',
-        [position, textHash, language, chunkIndex]
-      );
+      const combined = `${text}_${language}`;
+      return await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.MD5, combined);
     } catch (error) {
-      console.error('Error saving playback state:', error);
-    }
-  }
-
-  async getPlaybackState(textHash, language) {
-    if (!this.initialized) await this.init();
-
-    try {
-      const result = await this.db.getFirstAsync(
-        'SELECT chunk_index, last_played_position FROM audio_cache WHERE text_hash = ? AND language = ? AND last_played_position > 0 ORDER BY chunk_index DESC LIMIT 1',
-        [textHash, language]
-      );
-
-      return result ? { chunkIndex: result.chunk_index, position: result.last_played_position } : null;
-    } catch (error) {
-      console.error('Error getting playback state:', error);
-      return null;
-    }
-  }
-
-  async cacheAudioChunk(textHash, language, chunkIndex, audioUri) {
-    if (!this.initialized) await this.init();
-
-    try {
-      // Immediately save to database as "being cached" (is_cached = 0)
-      try {
-        await this.db.runAsync(
-          'INSERT OR REPLACE INTO audio_cache (text_hash, language, chunk_index, audio_uri, file_path, created_at, is_cached, last_played_position) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-          [textHash, language, chunkIndex, audioUri, '', Date.now(), 0, 0]
-        );
-      } catch (columnError) {
-        // Fallback for tables without new columns
-        await this.db.runAsync(
-          'INSERT OR REPLACE INTO audio_cache (text_hash, language, chunk_index, audio_uri, file_path, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-          [textHash, language, chunkIndex, audioUri, '', Date.now()]
-        );
-      }
-
-      // Download and save audio file in background
-      const fileName = `audio_${textHash}_${language}_${chunkIndex}.wav`;
-      const filePath = `${FileSystem.documentDirectory}audio_cache/${fileName}`;
-
-      // Ensure directory exists
-      const dirPath = `${FileSystem.documentDirectory}audio_cache/`;
-      const dirInfo = await FileSystem.getInfoAsync(dirPath);
-      if (!dirInfo.exists) {
-        await FileSystem.makeDirectoryAsync(dirPath, { intermediates: true });
-      }
-
-      // Download audio file
-      const downloadResult = await FileSystem.downloadAsync(audioUri, filePath);
-
-      if (downloadResult.status === 200) {
-        // Update database with file path and mark as cached
-        try {
-          await this.db.runAsync(
-            'UPDATE audio_cache SET file_path = ?, is_cached = 1 WHERE text_hash = ? AND language = ? AND chunk_index = ?',
-            [filePath, textHash, language, chunkIndex]
-          );
-        } catch (columnError) {
-          // Fallback for tables without is_cached column
-          await this.db.runAsync(
-            'UPDATE audio_cache SET file_path = ? WHERE text_hash = ? AND language = ? AND chunk_index = ?',
-            [filePath, textHash, language, chunkIndex]
-          );
-        }
-
-        console.log(`Audio chunk ${chunkIndex} cached successfully`);
-        return filePath;
-      }
-
-      return null;
-    } catch (error) {
-      console.error('Error caching audio chunk:', error);
-      return null;
+      console.error('Error generating hash:', error);
+      // Fallback to simple hash
+      return `${text.length}_${language}_${Date.now()}`;
     }
   }
 
   async getCachedAudio(textHash, language, chunkIndex) {
-    if (!this.initialized) await this.init();
-
     try {
-      // First try with is_cached column
-      let result;
-      try {
-        result = await this.db.getFirstAsync(
-          'SELECT audio_uri, file_path, is_cached FROM audio_cache WHERE text_hash = ? AND language = ? AND chunk_index = ? AND is_cached = 1',
-          [textHash, language, chunkIndex]
-        );
-      } catch (columnError) {
-        // Fallback for tables without is_cached column
-        result = await this.db.getFirstAsync(
-          'SELECT audio_uri, file_path FROM audio_cache WHERE text_hash = ? AND language = ? AND chunk_index = ?',
-          [textHash, language, chunkIndex]
-        );
-      }
+      await this.init();
+      if (!this.db) return null;
+
+      const result = await this.db.getFirstAsync(
+        'SELECT audio_uri, file_path, is_cached FROM audio_cache WHERE text_hash = ? AND language = ? AND chunk_index = ? AND is_cached = 1',
+        [textHash, language, chunkIndex]
+      );
 
       if (result) {
         // Check if file still exists
-        const fileInfo = await FileSystem.getInfoAsync(result.file_path);
-        if (fileInfo.exists) {
-          return result.file_path;
-        } else {
-          // File deleted, remove from cache
+        try {
+          const fileInfo = await FileSystem.getInfoAsync(result.file_path);
+          if (fileInfo.exists) {
+            return result.file_path;
+          } else {
+            // File deleted, remove from cache
+            await this.removeCachedAudio(textHash, language, chunkIndex);
+          }
+        } catch (fileError) {
+          console.warn('File check error:', fileError);
           await this.removeCachedAudio(textHash, language, chunkIndex);
         }
       }
@@ -4422,18 +4196,24 @@ class AudioCacheDB {
   }
 
   async cacheAudio(textHash, language, chunkIndex, audioUri) {
-    if (!this.initialized) await this.init();
-
     try {
+      await this.init();
+      if (!this.db) return null;
+
       // Download and save audio file
       const fileName = `audio_${textHash}_${language}_${chunkIndex}.wav`;
       const filePath = `${FileSystem.documentDirectory}audio_cache/${fileName}`;
 
       // Ensure directory exists
       const dirPath = `${FileSystem.documentDirectory}audio_cache/`;
-      const dirInfo = await FileSystem.getInfoAsync(dirPath);
-      if (!dirInfo.exists) {
-        await FileSystem.makeDirectoryAsync(dirPath, { intermediates: true });
+      try {
+        const dirInfo = await FileSystem.getInfoAsync(dirPath);
+        if (!dirInfo.exists) {
+          await FileSystem.makeDirectoryAsync(dirPath, { intermediates: true });
+        }
+      } catch (dirError) {
+        console.error('Directory creation error:', dirError);
+        return null;
       }
 
       // Download audio file
@@ -4458,42 +4238,39 @@ class AudioCacheDB {
   }
 
   async markAsUncached(textHash, language, chunkIndex) {
-    if (!this.initialized) await this.init();
-
     try {
-      // Try to update is_cached column if it exists
-      try {
-        await this.db.runAsync(
-          'UPDATE audio_cache SET is_cached = 0 WHERE text_hash = ? AND language = ? AND chunk_index = ?',
-          [textHash, language, chunkIndex]
-        );
-      } catch (columnError) {
-        // If column doesn't exist, just delete the entry
-        await this.db.runAsync(
-          'DELETE FROM audio_cache WHERE text_hash = ? AND language = ? AND chunk_index = ?',
-          [textHash, language, chunkIndex]
-        );
-      }
+      await this.init();
+      if (!this.db) return;
+
+      await this.db.runAsync(
+        'UPDATE audio_cache SET is_cached = 0 WHERE text_hash = ? AND language = ? AND chunk_index = ?',
+        [textHash, language, chunkIndex]
+      );
     } catch (error) {
       console.error('Error marking as uncached:', error);
     }
   }
 
   async removeCachedAudio(textHash, language, chunkIndex) {
-    if (!this.initialized) await this.init();
-
     try {
+      await this.init();
+      if (!this.db) return;
+
       // Get file path before deleting
       const result = await this.db.getFirstAsync(
         'SELECT file_path FROM audio_cache WHERE text_hash = ? AND language = ? AND chunk_index = ?',
         [textHash, language, chunkIndex]
       );
 
-      if (result) {
+      if (result && result.file_path) {
         // Delete file if exists
-        const fileInfo = await FileSystem.getInfoAsync(result.file_path);
-        if (fileInfo.exists) {
-          await FileSystem.deleteAsync(result.file_path);
+        try {
+          const fileInfo = await FileSystem.getInfoAsync(result.file_path);
+          if (fileInfo.exists) {
+            await FileSystem.deleteAsync(result.file_path);
+          }
+        } catch (fileError) {
+          console.warn('File deletion error:', fileError);
         }
       }
 
@@ -4508,9 +4285,10 @@ class AudioCacheDB {
   }
 
   async cleanOldEntries(beforeTimestamp) {
-    if (!this.initialized) await this.init();
-
     try {
+      await this.init();
+      if (!this.db) return;
+
       // Get old entries to delete their files
       const oldEntries = await this.db.getAllAsync(
         'SELECT file_path FROM audio_cache WHERE created_at < ?',
@@ -4519,13 +4297,15 @@ class AudioCacheDB {
 
       // Delete files
       for (const entry of oldEntries) {
-        try {
-          const fileInfo = await FileSystem.getInfoAsync(entry.file_path);
-          if (fileInfo.exists) {
-            await FileSystem.deleteAsync(entry.file_path);
+        if (entry.file_path) {
+          try {
+            const fileInfo = await FileSystem.getInfoAsync(entry.file_path);
+            if (fileInfo.exists) {
+              await FileSystem.deleteAsync(entry.file_path);
+            }
+          } catch (error) {
+            console.warn('Error deleting old cache file:', error);
           }
-        } catch (error) {
-          console.warn('Error deleting old cache file:', error);
         }
       }
 
@@ -4537,32 +4317,31 @@ class AudioCacheDB {
   }
 
   async getAllCachedChunks(textHash, language) {
-    if (!this.initialized) await this.init();
-
     try {
-      let results;
-      try {
-        results = await this.db.getAllAsync(
-          'SELECT chunk_index, file_path FROM audio_cache WHERE text_hash = ? AND language = ? AND is_cached = 1 ORDER BY chunk_index',
-          [textHash, language]
-        );
-      } catch (columnError) {
-        // Fallback for tables without is_cached column
-        results = await this.db.getAllAsync(
-          'SELECT chunk_index, file_path FROM audio_cache WHERE text_hash = ? AND language = ? ORDER BY chunk_index',
-          [textHash, language]
-        );
-      }
+      await this.init();
+      if (!this.db) return {};
+
+      const results = await this.db.getAllAsync(
+        'SELECT chunk_index, file_path FROM audio_cache WHERE text_hash = ? AND language = ? AND is_cached = 1 ORDER BY chunk_index',
+        [textHash, language]
+      );
 
       const cachedChunks = {};
       for (const result of results) {
-        // Verify file exists
-        const fileInfo = await FileSystem.getInfoAsync(result.file_path);
-        if (fileInfo.exists) {
-          cachedChunks[result.chunk_index] = result.file_path;
-        } else {
-          // Mark as uncached if file doesn't exist
-          await this.markAsUncached(textHash, language, result.chunk_index);
+        if (result.file_path) {
+          // Verify file exists
+          try {
+            const fileInfo = await FileSystem.getInfoAsync(result.file_path);
+            if (fileInfo.exists) {
+              cachedChunks[result.chunk_index] = result.file_path;
+            } else {
+              // Mark as uncached if file doesn't exist
+              await this.markAsUncached(textHash, language, result.chunk_index);
+            }
+          } catch (fileError) {
+            console.warn('File verification error:', fileError);
+            await this.markAsUncached(textHash, language, result.chunk_index);
+          }
         }
       }
 
@@ -4574,22 +4353,14 @@ class AudioCacheDB {
   }
 
   async getCacheStats(textHash, language) {
-    if (!this.initialized) await this.init();
-
     try {
-      let result;
-      try {
-        result = await this.db.getFirstAsync(
-          'SELECT COUNT(*) as total, SUM(is_cached) as cached FROM audio_cache WHERE text_hash = ? AND language = ?',
-          [textHash, language]
-        );
-      } catch (columnError) {
-        // Fallback for tables without is_cached column - assume all existing entries are cached
-        result = await this.db.getFirstAsync(
-          'SELECT COUNT(*) as total, COUNT(*) as cached FROM audio_cache WHERE text_hash = ? AND language = ?',
-          [textHash, language]
-        );
-      }
+      await this.init();
+      if (!this.db) return { total: 0, cached: 0 };
+
+      const result = await this.db.getFirstAsync(
+        'SELECT COUNT(*) as total, SUM(is_cached) as cached FROM audio_cache WHERE text_hash = ? AND language = ?',
+        [textHash, language]
+      );
 
       return {
         total: result?.total || 0,
@@ -4615,8 +4386,6 @@ const TTSFunction = ({ text, onChunkChange }) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [cacheStatus, setCacheStatus] = useState('');
   const [loadingMessage, setLoadingMessage] = useState('');
-  const [showRestoreDialog, setShowRestoreDialog] = useState(false);
-  const [restoreData, setRestoreData] = useState(null);
 
   // Refs for audio management
   const chunks = useRef([]);
@@ -4632,67 +4401,42 @@ const TTSFunction = ({ text, onChunkChange }) => {
   const audioCacheDB = useRef(new AudioCacheDB());
   const textHash = useRef('');
   const pausedPosition = useRef(0);
-  const appState = useRef(AppState.currentState);
-  const notificationId = useRef(null);
+  const isMounted = useRef(true);
+  const isScreenFocused = useRef(true);
+
+  // Track focus state to stop audio when navigating away
+  useFocusEffect(
+    React.useCallback(() => {
+      isScreenFocused.current = true;
+      return () => {
+        isScreenFocused.current = false;
+        // Stop audio when losing focus (navigating away)
+        if (playing) {
+          stopAudio();
+        }
+      };
+    }, [playing])
+  );
 
   useEffect(() => {
+    isMounted.current = true;
     // Initialize audio and database
     initializeAudio();
-    audioCacheDB.current.init();
-
-    // App state listener
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-
-    // Notification response listener
-    const notificationSubscription = Notifications.addNotificationResponseReceivedListener(
-      handleNotificationResponse
-    );
-
-    // Check for existing playback state when component mounts
-    if (text) {
-      checkAndRestorePlaybackState();
-    }
+    
+    // Initialize database with error handling
+    audioCacheDB.current.init().catch(error => {
+      console.error('Database initialization failed:', error);
+    });
 
     return () => {
+      isMounted.current = false;
       cleanup();
-      subscription?.remove();
-      notificationSubscription?.remove();
     };
   }, []);
 
-  const checkAndRestorePlaybackState = async () => {
-    if (!textHash.current) return;
-    
-    const playbackState = await audioCacheDB.current.getPlaybackState(textHash.current, selectedLanguage);
-    if (playbackState && playbackState.chunkIndex > 0) {
-      console.log('Found previous playback state:', playbackState);
-      setRestoreData(playbackState);
-      setShowRestoreDialog(true);
-    }
-  };
-
-  const handleRestorePlayback = async (restore = false) => {
-    setShowRestoreDialog(false);
-    
-    if (restore && restoreData) {
-      currentIndex.current = restoreData.chunkIndex;
-      totalElapsedTime.current = restoreData.chunkIndex * (estimateDuration(text) / createChunks(text).length);
-      console.log(`Restored playback from chunk ${restoreData.chunkIndex}`);
-    }
-    
-    setRestoreData(null);
-  };backState = await audioCacheDB.current.getPlaybackState(textHash.current, selectedLanguage);
-    if (playbackState) {
-      console.log('Found previous playback state:', playbackState);
-      // You can show a restore dialog here if needed
-      // For now, we'll just log it - you can uncomment the next line to auto-restore
-      // currentIndex.current = playbackState.chunkIndex;
-    }
-  };
-
   useEffect(() => {
     // Generate text hash when text or language changes
-    if (text) {
+    if (text && isMounted.current) {
       generateTextHashAsync();
     }
   }, [text, selectedLanguage]);
@@ -4702,7 +4446,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
       await Audio.requestPermissionsAsync();
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: false,
-        staysActiveInBackground: true,
+        staysActiveInBackground: false, // Changed to false to prevent background playback
         playsInSilentModeIOS: true,
         shouldDuckAndroid: true,
         playThroughEarpieceAndroid: false,
@@ -4712,142 +4456,36 @@ const TTSFunction = ({ text, onChunkChange }) => {
     }
   };
 
-  const handleAppStateChange = (nextAppState) => {
-    console.log('App state changed:', appState.current, '->', nextAppState);
-    
-    if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-      // App has come to the foreground
-      console.log('App came to foreground');
-      if (notificationId.current) {
-        Notifications.dismissNotificationAsync(notificationId.current);
-        notificationId.current = null;
-      }
-    } else if (appState.current === 'active' && nextAppState.match(/inactive|background/)) {
-      // App has gone to the background
-      console.log('App went to background, playing:', playing);
-      if (playing) {
-        setupMediaNotificationCategories();
-        setTimeout(() => {
-          showMediaControlNotification();
-        }, 1000); // Delay to ensure app is fully backgrounded
-      }
-    }
-    appState.current = nextAppState;
-  };
-
-  const showMediaControlNotification = async () => {
-    try {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== 'granted') {
-        console.log('Notification permission not granted');
-        return;
-      }
-
-      // Cancel any existing notification
-      if (notificationId.current) {
-        await Notifications.dismissNotificationAsync(notificationId.current);
-      }
-
-      const currentChunk = currentIndex.current + 1;
-      const totalChunks = chunks.current.length;
-      const statusText = paused ? 'Paused' : 'Playing';
-      const progressPercent = Math.round(progress);
-      
-      // Create a media-style notification
-      const notification = await Notifications.scheduleNotificationAsync({
-        content: {
-          title: `TTS Audio Player`,
-          body: `${statusText} • ${currentChunk}/${totalChunks} chunks • ${progressPercent}%`,
-          data: { 
-            type: 'media_control',
-            isPlaying: playing && !paused,
-            currentChunk,
-            totalChunks,
-            progress: progressPercent
-          },
-          sound: false,
-          priority: Notifications.AndroidNotificationPriority.MAX,
-          sticky: true,
-          autoDismiss: false,
-          categoryIdentifier: 'media',
-        },
-        trigger: null,
-      });
-
-      notificationId.current = notification;
-      console.log('Media control notification shown');
-    } catch (error) {
-      console.error('Error showing media notification:', error);
-    }
-  };
-
-  const setupMediaNotificationCategories = async () => {
-    try {
-      // Set up notification categories with actions for media controls
-      await Notifications.setNotificationCategoryAsync('media', [
-        {
-          identifier: 'play_pause',
-          buttonTitle: paused ? 'Play' : 'Pause',
-          options: { opensAppToForeground: false },
-        },
-        {
-          identifier: 'stop',
-          buttonTitle: 'Stop',
-          options: { opensAppToForeground: false },
-        },
-      ]);
-    } catch (error) {
-      console.error('Error setting up notification categories:', error);
-    }
-  };
-
-  const handleNotificationResponse = async (response) => {
-    console.log('Notification response received:', response);
-    
-    if (response.notification.request.content.data?.type === 'media_control') {
-      const actionId = response.actionIdentifier;
-      
-      if (actionId === 'play_pause') {
-        if (playing && !paused) {
-          await pausePlayback();
-        } else if (playing && paused) {
-          await resumePlayback();
-        } else {
-          speak();
-        }
-      } else if (actionId === 'stop') {
-        await stopAudio();
-      }
-    }
-    
-    // Update notification after action
-    if (appState.current.match(/inactive|background/) && playing) {
-      setTimeout(() => {
-        showMediaControlNotification();
-      }, 500);
-    }
-  };
-
   const generateTextHashAsync = async () => {
-    if (text) {
-      const hash = await audioCacheDB.current.generateTextHash(text, selectedLanguage);
-      textHash.current = hash;
-      updateCacheStatus();
+    if (text && isMounted.current) {
+      try {
+        const hash = await audioCacheDB.current.generateTextHash(text, selectedLanguage);
+        textHash.current = hash;
+        updateCacheStatus();
+      } catch (error) {
+        console.error('Error generating text hash:', error);
+        textHash.current = `${text.length}_${selectedLanguage}_${Date.now()}`;
+      }
     }
   };
 
   const updateCacheStatus = async () => {
-    if (!textHash.current || !text) return;
+    if (!textHash.current || !text || !isMounted.current) return;
 
-    const textChunks = createChunks(text);
-    const stats = await audioCacheDB.current.getCacheStats(textHash.current, selectedLanguage);
-    
-    if (stats.cached === textChunks.length && textChunks.length > 0) {
-      setCacheStatus('Fully cached');
-    } else if (stats.cached > 0) {
-      setCacheStatus(`${stats.cached}/${textChunks.length} cached`);
-    } else {
-      setCacheStatus('Not cached');
+    try {
+      const textChunks = createChunks(text);
+      const stats = await audioCacheDB.current.getCacheStats(textHash.current, selectedLanguage);
+      
+      if (stats.cached === textChunks.length && textChunks.length > 0) {
+        setCacheStatus('Fully cached');
+      } else if (stats.cached > 0) {
+        setCacheStatus(`${stats.cached}/${textChunks.length} cached`);
+      } else {
+        setCacheStatus('Not cached');
+      }
+    } catch (error) {
+      console.error('Error updating cache status:', error);
+      setCacheStatus('Cache unavailable');
     }
   };
 
@@ -4861,10 +4499,6 @@ const TTSFunction = ({ text, onChunkChange }) => {
       }
       currentSound.current = null;
     }
-    if (notificationId.current) {
-      await Notifications.dismissNotificationAsync(notificationId.current);
-      notificationId.current = null;
-    }
   };
 
   const startProgressTracking = () => {
@@ -4873,7 +4507,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
     }
 
     progressInterval.current = setInterval(() => {
-      if (playing && !paused && chunks.current.length > 0) {
+      if (playing && !paused && chunks.current.length > 0 && isMounted.current && isScreenFocused.current) {
         const estimatedDuration = estimateDuration(text);
         const chunkDuration = estimatedDuration / chunks.current.length;
         const currentChunkElapsed = (Date.now() - chunkStartTime.current) / 1000;
@@ -4908,11 +4542,13 @@ const TTSFunction = ({ text, onChunkChange }) => {
     stopProgressTracking();
     cleanup();
 
-    setElapsedTime(0);
-    setProgress(0);
-    setPaused(false);
-    setIsPreparingAudio(false);
-    setLoadingMessage('');
+    if (isMounted.current) {
+      setElapsedTime(0);
+      setProgress(0);
+      setPaused(false);
+      setIsPreparingAudio(false);
+      setLoadingMessage('');
+    }
   };
 
   const stopPlayback = async () => {
@@ -4926,18 +4562,17 @@ const TTSFunction = ({ text, onChunkChange }) => {
         currentSound.current = null;
       }
 
-      if (notificationId.current) {
-        await Notifications.dismissNotificationAsync(notificationId.current);
-        notificationId.current = null;
-      }
-
       isPlayingChunk.current = false;
-      setPlaying(false);
-      setPaused(false);
+      if (isMounted.current) {
+        setPlaying(false);
+        setPaused(false);
+      }
     } catch (error) {
       console.error("Stop playback error:", error);
-      setPlaying(false);
-      setPaused(false);
+      if (isMounted.current) {
+        setPlaying(false);
+        setPaused(false);
+      }
     }
   };
 
@@ -4945,20 +4580,15 @@ const TTSFunction = ({ text, onChunkChange }) => {
     try {
       if (currentSound.current && playing && !paused) {
         await currentSound.current.pauseAsync();
-        setPaused(true);
+        if (isMounted.current) {
+          setPaused(true);
+        }
         stopProgressTracking();
 
         // Save current position
         const chunkDuration = estimateDuration(text) / chunks.current.length;
         const currentChunkElapsed = (Date.now() - chunkStartTime.current) / 1000;
         pausedPosition.current = currentChunkElapsed;
-
-        // Update notification if in background
-        if (appState.current.match(/inactive|background/)) {
-          setTimeout(() => {
-            showMediaControlNotification();
-          }, 500);
-        }
       }
     } catch (error) {
       console.error("Pause playback error:", error);
@@ -4967,20 +4597,15 @@ const TTSFunction = ({ text, onChunkChange }) => {
 
   const resumePlayback = async () => {
     try {
-      if (currentSound.current && playing && paused) {
+      if (currentSound.current && playing && paused && isScreenFocused.current) {
         // Update start time to account for paused duration
         chunkStartTime.current = Date.now() - (pausedPosition.current * 1000);
 
         await currentSound.current.playAsync();
-        setPaused(false);
-        startProgressTracking();
-
-        // Update notification if in background
-        if (appState.current.match(/inactive|background/)) {
-          setTimeout(() => {
-            showBackgroundNotification();
-          }, 500);
+        if (isMounted.current) {
+          setPaused(false);
         }
+        startProgressTracking();
       }
     } catch (error) {
       console.error("Resume playback error:", error);
@@ -5021,37 +4646,53 @@ const TTSFunction = ({ text, onChunkChange }) => {
   };
 
   const getOrGenerateAudio = async (chunkText, chunkIndex) => {
+    if (!isMounted.current || !isScreenFocused.current) return null;
+    
     setLoadingMessage(`Loading audio chunk ${chunkIndex + 1}/${chunks.current.length}...`);
     
     // Check cache first
-    const cachedPath = await audioCacheDB.current.getCachedAudio(
-      textHash.current,
-      selectedLanguage,
-      chunkIndex
-    );
+    try {
+      const cachedPath = await audioCacheDB.current.getCachedAudio(
+        textHash.current,
+        selectedLanguage,
+        chunkIndex
+      );
 
-    if (cachedPath) {
-      return `file://${cachedPath}`;
+      if (cachedPath && isMounted.current) {
+        return `file://${cachedPath}`;
+      }
+    } catch (error) {
+      console.warn('Cache check failed:', error);
     }
 
-    // Generate new audio
+    // Generate new audio only if still mounted and focused
+    if (!isMounted.current || !isScreenFocused.current) return null;
+    
     const audioUrl = await generateAudioFromText(chunkText);
 
-    // Start caching process immediately (don't wait for it to complete)
-    audioCacheDB.current.cacheAudioChunk(
-      textHash.current,
-      selectedLanguage,
-      chunkIndex,
-      audioUrl
-    ).then(() => {
-      // Update cache status after caching
-      updateCacheStatus();
-    });
+    // Cache the audio in background (don't wait for it)
+    if (isMounted.current && isScreenFocused.current) {
+      audioCacheDB.current.cacheAudio(
+        textHash.current,
+        selectedLanguage,
+        chunkIndex,
+        audioUrl
+      ).then(() => {
+        // Update cache status after caching
+        if (isMounted.current) {
+          updateCacheStatus();
+        }
+      }).catch(error => {
+        console.warn('Background caching failed:', error);
+      });
+    }
 
     return audioUrl;
   };
 
-  const preloadNextChunks = async (startIndex, count = 3) => {
+  const preloadNextChunks = async (startIndex, count = 2) => { // Reduced from 3 to 2
+    if (!isMounted.current || !isScreenFocused.current) return;
+    
     const loadPromises = [];
 
     for (let i = startIndex; i < Math.min(startIndex + count, chunks.current.length); i++) {
@@ -5059,8 +4700,14 @@ const TTSFunction = ({ text, onChunkChange }) => {
         preloadQueue.current.add(i);
         loadPromises.push((async () => {
           try {
+            if (!isMounted.current || !isScreenFocused.current) {
+              preloadQueue.current.delete(i);
+              return;
+            }
             const audioUri = await getOrGenerateAudio(chunks.current[i], i);
-            chunkAudios.current[i] = audioUri;
+            if (audioUri && isMounted.current && isScreenFocused.current) {
+              chunkAudios.current[i] = audioUri;
+            }
             preloadQueue.current.delete(i);
           } catch (error) {
             console.error(`Error preloading chunk ${i}:`, error);
@@ -5076,16 +4723,14 @@ const TTSFunction = ({ text, onChunkChange }) => {
   };
 
   const playNextChunk = async () => {
-    if (shouldStop.current || currentIndex.current >= chunks.current.length) {
-      setPlaying(false);
-      setIsPreparingAudio(false);
-      setLoadingMessage('');
+    if (shouldStop.current || currentIndex.current >= chunks.current.length || !isMounted.current || !isScreenFocused.current) {
+      if (isMounted.current) {
+        setPlaying(false);
+        setIsPreparingAudio(false);
+        setLoadingMessage('');
+      }
       isPlayingChunk.current = false;
       stopProgressTracking();
-      if (notificationId.current) {
-        await Notifications.dismissNotificationAsync(notificationId.current);
-        notificationId.current = null;
-      }
       return;
     }
 
@@ -5099,14 +4744,24 @@ const TTSFunction = ({ text, onChunkChange }) => {
     try {
       // Wait for current chunk audio if not ready
       let attempts = 0;
-      while (!chunkAudios.current[chunkIndex] && attempts < 50) {
+      while (!chunkAudios.current[chunkIndex] && attempts < 30 && isMounted.current && isScreenFocused.current) { // Reduced from 50 to 30
         await new Promise(resolve => setTimeout(resolve, 100));
         attempts++;
       }
 
+      if (!isMounted.current || !isScreenFocused.current) {
+        isPlayingChunk.current = false;
+        return;
+      }
+
       if (!chunkAudios.current[chunkIndex]) {
         const audioUri = await getOrGenerateAudio(chunks.current[chunkIndex], chunkIndex);
-        chunkAudios.current[chunkIndex] = audioUri;
+        if (audioUri && isMounted.current && isScreenFocused.current) {
+          chunkAudios.current[chunkIndex] = audioUri;
+        } else {
+          isPlayingChunk.current = false;
+          return;
+        }
       }
 
       // Clean up previous sound
@@ -5128,19 +4783,17 @@ const TTSFunction = ({ text, onChunkChange }) => {
         }
       );
 
+      if (!isMounted.current || !isScreenFocused.current) {
+        await sound.unloadAsync();
+        isPlayingChunk.current = false;
+        return;
+      }
+
       currentSound.current = sound;
       chunkStartTime.current = Date.now();
 
       const onPlaybackStatusUpdate = (status) => {
-        if (status.didJustFinish && !shouldStop.current && !paused) {
-          // Save playback state before moving to next chunk
-          audioCacheDB.current.savePlaybackState(
-            textHash.current,
-            selectedLanguage,
-            chunkIndex,
-            Date.now()
-          );
-
+        if (status.didJustFinish && !shouldStop.current && !paused && isMounted.current && isScreenFocused.current) {
           const chunkDuration = estimateDuration(chunks.current[chunkIndex]) / chunks.current.length;
           totalElapsedTime.current += chunkDuration;
 
@@ -5148,17 +4801,15 @@ const TTSFunction = ({ text, onChunkChange }) => {
           currentIndex.current++;
 
           if (currentIndex.current < chunks.current.length) {
-            preloadNextChunks(currentIndex.current + 1, 4);
+            preloadNextChunks(currentIndex.current + 1, 3); // Reduced from 4 to 3
             setTimeout(() => playNextChunk(), 100);
           } else {
-            setPlaying(false);
-            setIsPreparingAudio(false);
-            setLoadingMessage('');
-            stopProgressTracking();
-            if (notificationId.current) {
-              Notifications.dismissNotificationAsync(notificationId.current);
-              notificationId.current = null;
+            if (isMounted.current) {
+              setPlaying(false);
+              setIsPreparingAudio(false);
+              setLoadingMessage('');
             }
+            stopProgressTracking();
           }
         }
       };
@@ -5166,46 +4817,46 @@ const TTSFunction = ({ text, onChunkChange }) => {
       sound.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate);
       await sound.playAsync();
 
-      if (!playing) {
+      if (!playing && isMounted.current) {
         setPlaying(true);
       }
 
-      setIsPreparingAudio(false);
-      setLoadingMessage('');
+      if (isMounted.current) {
+        setIsPreparingAudio(false);
+        setLoadingMessage('');
+      }
 
       if (!progressInterval.current) {
         startProgressTracking();
       }
 
-      // Show notification if in background
-      if (appState.current.match(/inactive|background/)) {
-        setupMediaNotificationCategories();
-        setTimeout(() => {
-          showMediaControlNotification();
-        }, 500);
-      }
-
       if (chunkIndex + 1 < chunks.current.length) {
-        preloadNextChunks(chunkIndex + 1, 4);
+        preloadNextChunks(chunkIndex + 1, 3); // Reduced from 4 to 3
       }
 
     } catch (error) {
       console.error("Playback error:", error);
       isPlayingChunk.current = false;
-      setPlaying(false);
-      setIsPreparingAudio(false);
-      setLoadingMessage('');
+      if (isMounted.current) {
+        setPlaying(false);
+        setIsPreparingAudio(false);
+        setLoadingMessage('');
+      }
       stopProgressTracking();
-      Alert.alert("Playback Error", "Failed to play audio chunk");
+      if (isMounted.current) {
+        Alert.alert("Playback Error", "Failed to play audio chunk");
+      }
     }
   };
 
   const speak = async () => {
-    if (!text) return;
+    if (!text || !isMounted.current || !isScreenFocused.current) return;
 
     // Prevent multiple simultaneous operations
     if (isLoading || isPreparingAudio) {
-      Alert.alert("Loading", "Audio is currently loading. Please wait...");
+      if (isMounted.current) {
+        Alert.alert("Loading", "Audio is currently loading. Please wait...");
+      }
       return;
     }
 
@@ -5221,6 +4872,8 @@ const TTSFunction = ({ text, onChunkChange }) => {
 
     try {
       reset();
+      if (!isMounted.current || !isScreenFocused.current) return;
+      
       setPlaying(true);
       setIsLoading(true);
       setIsPreparingAudio(true);
@@ -5232,18 +4885,26 @@ const TTSFunction = ({ text, onChunkChange }) => {
       setTotalDuration(estimatedDuration * 1000);
 
       // Check cache status
-      const cachedChunks = await audioCacheDB.current.getAllCachedChunks(
-        textHash.current,
-        selectedLanguage
-      );
+      try {
+        const cachedChunks = await audioCacheDB.current.getAllCachedChunks(
+          textHash.current,
+          selectedLanguage
+        );
 
-      // Load cached chunks
-      for (const [index, filePath] of Object.entries(cachedChunks)) {
-        chunkAudios.current[parseInt(index)] = `file://${filePath}`;
+        // Load cached chunks
+        for (const [index, filePath] of Object.entries(cachedChunks)) {
+          chunkAudios.current[parseInt(index)] = `file://${filePath}`;
+        }
+      } catch (error) {
+        console.warn('Cache loading failed:', error);
       }
 
-      // Preload first few chunks (cached or generate new)
-      await preloadNextChunks(0, 5);
+      if (!isMounted.current || !isScreenFocused.current) return;
+
+      // Preload first 3 chunks (reduced from 5)
+      await preloadNextChunks(0, 3);
+
+      if (!isMounted.current || !isScreenFocused.current) return;
 
       setIsLoading(false);
       currentIndex.current = 0;
@@ -5253,11 +4914,13 @@ const TTSFunction = ({ text, onChunkChange }) => {
 
     } catch (error) {
       console.error("Speech generation error:", error);
-      Alert.alert("Error", "Failed to generate speech");
-      setIsLoading(false);
-      setIsPreparingAudio(false);
-      setLoadingMessage('');
-      setPlaying(false);
+      if (isMounted.current) {
+        Alert.alert("Error", "Failed to generate speech");
+        setIsLoading(false);
+        setIsPreparingAudio(false);
+        setLoadingMessage('');
+        setPlaying(false);
+      }
       stopProgressTracking();
     }
   };
@@ -5320,7 +4983,9 @@ const TTSFunction = ({ text, onChunkChange }) => {
     await stopPlayback();
     reset();
     setTimeout(() => {
-      speak();
+      if (isMounted.current && isScreenFocused.current) {
+        speak();
+      }
     }, 100);
   };
 
@@ -5346,7 +5011,9 @@ const TTSFunction = ({ text, onChunkChange }) => {
         isPlayingChunk.current = false;
 
         setTimeout(() => {
-          playNextChunk();
+          if (isMounted.current && isScreenFocused.current) {
+            playNextChunk();
+          }
         }, 100);
       }
     }
@@ -5421,7 +5088,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
         maximumTrackTintColor="#d3d3d3"
         disabled={!playing || isLoading || isPreparingAudio}
         onSlidingComplete={async (value) => {
-          if (playing && chunks.current.length > 0 && !isLoading && !isPreparingAudio) {
+          if (playing && chunks.current.length > 0 && !isLoading && !isPreparingAudio && isMounted.current && isScreenFocused.current) {
             const estimatedDuration = estimateDuration(text);
             const chunkDuration = estimatedDuration / chunks.current.length;
             const newChunkIndex = Math.floor((value / 1000) / chunkDuration);
