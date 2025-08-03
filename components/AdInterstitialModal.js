@@ -1,4 +1,4 @@
-// AdInterstitialModal.js
+
 import React, { useState, useEffect } from 'react';
 import {
   Modal,
@@ -20,7 +20,7 @@ const { width, height } = Dimensions.get('window');
 
 // Initialize the interstitial ad
 // Use TestIds.INTERSTITIAL for testing, replace with your actual ad unit ID for production
-const adUnitId = __DEV__ ? TestIds.INTERSTITIAL : 'ca-app-pub-xxxxxxxxxxxxx/yyyyyyyyyy';
+const adUnitId = __DEV__ ? TestIds.INTERSTITIAL : 'ca-app-pub-2962255342437267/5785387487';
 
 const interstitial = InterstitialAd.createForAdRequest(adUnitId, {
   requestNonPersonalizedAdsOnly: true,

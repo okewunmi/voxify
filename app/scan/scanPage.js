@@ -112,61 +112,6 @@ const ScanScreen = () => {
     }
   };
 
-  // const handleContinue = async () => {
-  //   if (!user) return Alert.alert("User not loaded");
-  //   setLoading(true);
-
-  //   try {
-  //     for (const uri of images) {
-  //       const formData = new FormData();
-  //       formData.append("apikey", "K85326546888957");
-  //       formData.append("language", "eng");
-  //       formData.append("isOverlayRequired", "false");
-
-  //       // Convert local image to blob
-  //       const imageBlob = {
-  //         uri,
-  //         name: "image.jpg",
-  //         type: "image/jpeg",
-  //       };
-
-  //       formData.append("file", imageBlob);
-
-  //       const response = await fetch("https://api.ocr.space/parse/image", {
-  //         method: "POST",
-  //         body: formData,
-  //         headers: {
-  //           Accept: "application/json",
-  //         },
-  //       });
-
-  //       const result = await response.json();
-
-  //       if (
-  //         result &&
-  //         result.ParsedResults &&
-  //         result.ParsedResults.length > 0
-  //       ) {
-  //         const extractedText = result.ParsedResults[0].ParsedText;
-  //         await createScanDoc(user.$id, uri, extractedText.trim());
-  //       } else {
-  //         throw new Error("No text found in image.");
-  //       }
-  //     }
-
-  //     Alert.alert("Success", "Images processed and saved.");
-  //     clearImages();
-  //     setShowPreview(false);
-  //     router.replace("/library");
-  //   } catch (error) {
-  //     console.error("OCR error", error);
-  //     Alert.alert("Error", "OCR failed: " + error.message);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  
   const handleContinue = async () => {
   if (!user) return Alert.alert("User not loaded");
   setLoading(true);
