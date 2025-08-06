@@ -732,7 +732,7 @@ import Card from "../../components/Card";
 import CardScan from "../../components/CardScan";
 import CardTxt from "../../components/CardTxt";
 import CardWeb from "../../components/CardWeb";
-import AdInterstitialModal from '../../components/AdInterstitialModal';
+// import AdInterstitialModal from '../../components/AdInterstitialModal';
 
 const home = () => {
   const [uploading, setUploading] = useState(false);
@@ -1226,19 +1226,19 @@ const home = () => {
         </Modal>
       ) : null}
 
-      {/* Ad Interstitial Modal */}
+      {/* Ad Interstitial Modal
       <AdInterstitialModal
         visible={showAd}
         onClose={handleCloseAd}
         onAdClosed={handleAdClosed}
         autoShow={true}
-      />
+      /> */}
     </SafeAreaView>
   );
 };
 
-export default home;
 
+export default home;
 
 const styles = StyleSheet.create({
   modalContainer: {

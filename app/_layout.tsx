@@ -7,7 +7,7 @@ import { TouchableOpacity, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-
+import mobileAds from 'react-native-google-mobile-ads';
 // Prevent auto hiding of splash screen
 SplashScreen.preventAutoHideAsync();
 
@@ -33,6 +33,18 @@ const RootLayout = () => {
   if (!fontsLoaded && !error) {
     return null; // Keep showing splash screen
   }
+
+ useEffect(() => {
+    // Initialize AdMob
+    mobileAds()
+      .initialize()
+      .then(adapterStatuses => {
+        console.log('AdMob initialized successfully:', adapterStatuses);
+      })
+      .catch(error => {
+        console.error('AdMob initialization failed:', error);
+      });
+  }, []); 
 
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
