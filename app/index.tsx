@@ -117,27 +117,6 @@
 
 
 
-// // {
-// //   "cli": {
-// //     "version": ">= 16.13.3",
-// //     "appVersionSource": "remote"
-// //   },
-// //   "build": {
-// //     "development": {
-// //       "developmentClient": true,
-// //       "distribution": "internal"
-// //     },
-// //     "preview": {
-// //       "distribution": "internal"
-// //     },
-// //     "production": {
-// //       "autoIncrement": true
-// //     }
-// //   },
-// //   "submit": {
-// //     "production": {}
-// //   }
-// // }
 
 
 import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
