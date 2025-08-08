@@ -34,18 +34,6 @@ const RootLayout = () => {
     return null; // Keep showing splash screen
   }
 
- useEffect(() => {
-    // Initialize AdMob
-    mobileAds()
-      .initialize()
-      .then(adapterStatuses => {
-        console.log('AdMob initialized successfully:', adapterStatuses);
-      })
-      .catch(error => {
-        console.error('AdMob initialization failed:', error);
-      });
-  }, []); 
-
   return (
     <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <GlobalProvider>
@@ -59,32 +47,16 @@ const RootLayout = () => {
           }}
         >
           <Stack.Screen name="index" options={{ headerShown: false }} />
-
-          {/* <Stack.Screen name="file/[fileId]" /> */}
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          {/* <Stack.Screen
-            name="type/typing"
-            options={{ headerTitle: 'Write or Paste Text' }}
-          /> */}
-          {/* <Stack.Screen
-            name="url/[urlId]"
-            // options={{ headerRight: () => <CustomHeaderRight /> }}
-          /> */}
-
-          {/* <Stack.Screen name="txt/[txtId]" /> */}
-          {/* <Stack.Screen name="imgScan/[scanId]" /> */}
-          {/* <Stack.Screen
-            name="scan/scanPage"
-            options={{
-              headerStyle: {
-                backgroundColor: 'black',
-              },
-              headerTintColor: 'white',
-            }}
-          /> */}
+          <Stack.Screen name="file/[fileld]" options={{ headerShown: false }} />
+            <Stack.Screen name="txt/[txtld]" options={{ headerShown: false }} />
+            <Stack.Screen name="type/[typing]" options={{ headerShown: false }} />
+            <Stack.Screen name="url/[urlld]" options={{ headerShown: false }} />
+              <Stack.Screen name="imgScan/[scanld]" options={{ headerShown: false }} />
+              <Stack.Screen name="scan/scanpage" options={{ headerShown: false }} />
+              
         </Stack>
-
         <StatusBar style="light" />
       </GlobalProvider>
     </View>

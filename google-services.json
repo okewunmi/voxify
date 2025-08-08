@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "187762557281",
+    "firebase_url": "https://voxify-3a1c8-default-rtdb.firebaseio.com",
+    "project_id": "voxify-3a1c8",
+    "storage_bucket": "voxify-3a1c8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:187762557281:android:d74272214f56c516b38520",
+        "android_client_info": {
+          "package_name": "com.company.vox"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "187762557281-fbdapbunf8301mg36hhu8vokusq7ncit.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAn0icy3RZ9siwdN0-X7gSNjr-_-gcjSR4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "187762557281-fbdapbunf8301mg36hhu8vokusq7ncit.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:187762557281:android:6cdbd2f9e4f96b55b38520",
+        "android_client_info": {
+          "package_name": "com.company.voxify"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "187762557281-fbdapbunf8301mg36hhu8vokusq7ncit.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAn0icy3RZ9siwdN0-X7gSNjr-_-gcjSR4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "187762557281-fbdapbunf8301mg36hhu8vokusq7ncit.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
