@@ -1,3 +1,4 @@
+// "iosAppId": "ca-app-pub-2962255342437267~7808915592"
 // import AntDesign from "@expo/vector-icons/AntDesign";
 // import Entypo from "@expo/vector-icons/Entypo";
 // import FontAwesome6 from "@expo/vector-icons/FontAwesome6";

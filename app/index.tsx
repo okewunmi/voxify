@@ -158,43 +158,51 @@ const index = () => {
     return () => clearTimeout(timer); // Clear timer on component unmount
   }, [navigation]);
 
-  useEffect(() => {
-    // Initialize Google Mobile Ads SDK for Android
-    const initializeAds = async () => {
-      try {
-        console.log('Initializing Google Mobile Ads SDK...');
+  // useEffect(() => {
+  //   // Initialize Google Mobile Ads SDK for Android
+  //   const initializeAds = async () => {
+  //     try {
+  //       console.log('Initializing Google Mobile Ads SDK...');
         
-        // Initialize the SDK
-        const adapterStatuses = await mobileAds().initialize();
-        console.log('Google Mobile Ads initialized successfully:', adapterStatuses);
+  //       // Initialize the SDK
+  //       const adapterStatuses = await mobileAds().initialize();
+  //       console.log('Google Mobile Ads initialized successfully:', adapterStatuses);
 
-        // Set request configuration for Android
-        await mobileAds().setRequestConfiguration({
-          maxAdContentRating: 'G',
-          tagForChildDirectedTreatment: false,
-          tagForUnderAgeOfConsent: false,
-          testDeviceIdentifiers: __DEV__ ? ['EMULATOR'] : [], // Add your test device ID here if needed
-        });
+  //       // Set request configuration for Android
+  //       await mobileAds().setRequestConfiguration({
+  //         maxAdContentRating: 'G',
+  //         tagForChildDirectedTreatment: false,
+  //         tagForUnderAgeOfConsent: false,
+  //         testDeviceIdentifiers: __DEV__ ? ['EMULATOR'] : [], // Add your test device ID here if needed
+  //       });
 
-        console.log('Ad request configuration set for Android');
-      } catch (error) {
-        console.error('Failed to initialize Google Mobile Ads:', error);
-        console.error('Error details:', error.message);
+  //       console.log('Ad request configuration set for Android');
+  //     } catch (error) {
+  //       console.error('Failed to initialize Google Mobile Ads:', error);
+  //       console.error('Error details:', error.message);
         
-        // Check if the error is related to module not found
-        if (error.message && error.message.includes('RNGoogleMobileAdsModule')) {
-          console.error('The react-native-google-mobile-ads module is not properly linked.');
-          console.error('Make sure to:');
-          console.error('1. Install the module: npm install react-native-google-mobile-ads');
-          console.error('2. Run: npx pod-install (if using iOS, but you mentioned Android only)');
-          console.error('3. Rebuild your app');
-        }
-      }
-    };
+  //       // Check if the error is related to module not found
+  //       if (error.message && error.message.includes('RNGoogleMobileAdsModule')) {
+  //         console.error('The react-native-google-mobile-ads module is not properly linked.');
+  //         console.error('Make sure to:');
+  //         console.error('1. Install the module: npm install react-native-google-mobile-ads');
+  //         console.error('2. Run: npx pod-install (if using iOS, but you mentioned Android only)');
+  //         console.error('3. Rebuild your app');
+  //       }
+  //     }
+  //   };
 
-    initializeAds();
+  //   initializeAds();
+  // }, []);
+
+  useEffect(()=>{
+    mobileAds()
+    .initialize()
+    .then(adapterStatuses=>{
+
+    })
   }, []);
-
+  
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.view}>
