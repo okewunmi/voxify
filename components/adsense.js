@@ -25,7 +25,8 @@ const getAdUnitId = () => {
   }
   
   // Production Android ad unit ID
-  return 'ca-app-pub-3940256099942544/1033173712'; // Replace with your actual Android ad unit
+  return 'ca-app-pub-2962255342437267/5785387487'; // Replace with your actual Android ad unit
+  // return 'ca-app-pub-3940256099942544/1033173712'; // Replace with your actual Android ad unit
 };
 
 const AdInterstitialModal = ({ visible, onClose, onAdClosed, autoShow = true }) => {

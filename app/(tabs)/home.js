@@ -947,7 +947,7 @@ const home = () => {
 
   // Modified handleFileUpload to show ad first
   const handleFileUpload = async () => {
-    console.log('File upload initiated - showing ad first');
+    // console.log('File upload initiated - showing ad first');
     
     // Store the actual upload function as pending action
     pendingActionRef.current = executeFileUpload;
@@ -958,13 +958,13 @@ const home = () => {
 
   // Original URL handling logic extracted to separate function  
   const executeUrlHandling = async () => {
-    console.log("URL handling executed after ad");
+    // console.log("URL handling executed after ad");
     setShowModal(true);
   };
 
   // Modified handleUrl to show ad first
   const handleUrl = async () => {
-    console.log("URL handling initiated - showing ad first");
+    // console.log("URL handling initiated - showing ad first");
     
     // Store the actual URL function as pending action
     pendingActionRef.current = executeUrlHandling;
@@ -975,13 +975,13 @@ const home = () => {
 
   // Function to execute scan navigation after ad
   const executeScanNavigation = () => {
-    console.log("Navigating to scan page after ad");
+    // console.log("Navigating to scan page after ad");
     router.push("scan/scanPage");
   };
 
   // Modified handleScanPress to show ad first
   const handleScanPress = () => {
-    console.log("Scan initiated - showing ad first");
+    // console.log("Scan initiated - showing ad first");
     
     // Store the navigation function as pending action
     pendingActionRef.current = executeScanNavigation;
@@ -992,13 +992,13 @@ const home = () => {
 
   // Function to execute typing navigation after ad
   const executeTypingNavigation = () => {
-    console.log("Navigating to typing page after ad");
+    // console.log("Navigating to typing page after ad");
     router.push("type/typing");
   };
 
   // Modified handleTypingPress to show ad first
   const handleTypingPress = () => {
-    console.log("Typing initiated - showing ad first");
+    // console.log("Typing initiated - showing ad first");
     
     // Store the navigation function as pending action
     pendingActionRef.current = executeTypingNavigation;
@@ -1238,12 +1238,12 @@ const home = () => {
 
        {/* Ad Interstitial Modal */}
 
-      {/* <AdSenseInterstitialModal
+       <AdSenseInterstitialModal
         visible={showAd}
         onClose={handleCloseAd}
         onAdClosed={handleAdClosed}
         autoShow={true}
-      /> */}
+      /> 
     </SafeAreaView>
   );
 };
