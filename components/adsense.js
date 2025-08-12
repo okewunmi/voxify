@@ -19,14 +19,14 @@ const { width, height } = Dimensions.get('window');
 
 // Android-only ad unit ID
 const getAdUnitId = () => {
-  if (__DEV__) {
-    // Use test ads in development
-    return TestIds.INTERSTITIAL;
-  }
+  // if (__DEV__) {
+  //   // Use test ads in development
+  //   return TestIds.INTERSTITIAL;
+  // }
   
   // Production Android ad unit ID
-  return 'ca-app-pub-2962255342437267/5785387487'; // Replace with your actual Android ad unit
-  // return 'ca-app-pub-3940256099942544/1033173712'; // Replace with your actual Android ad unit
+  return 'ca-app-pub-2962255342437267/7029399978'; // Replace with your actual Android ad unit
+
 };
 
 const AdInterstitialModal = ({ visible, onClose, onAdClosed, autoShow = true }) => {
@@ -44,7 +44,7 @@ const AdInterstitialModal = ({ visible, onClose, onAdClosed, autoShow = true }) 
       
       const interstitial = InterstitialAd.createForAdRequest(adUnitId, {
         requestNonPersonalizedAdsOnly: true,
-        keywords: ['fashion', 'clothing'],
+        keywords: ['fashion', 'clothing' ],
       });
       
       interstitialRef.current = interstitial;
