@@ -47,15 +47,15 @@ const RootLayout = () => {
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="file/[fileId]" options={{ headerShown: false }} />
-          <Stack.Screen name="txt/[txtId]" options={{ headerShown: false }} />
-          <Stack.Screen name="type/typing" options={{ headerShown: false }} />
-          <Stack.Screen name="url/[urlId]" options={{ headerShown: false }} />
+          <Stack.Screen name="file/[fileId]" />
+          <Stack.Screen name="txt/[txtId]" />
+          <Stack.Screen name="type/typing"  />
+          <Stack.Screen name="url/[urlId]"  />
           <Stack.Screen
             name="imgScan/[scanId]"
-            options={{ headerShown: false }}
+           
           />
-          <Stack.Screen name="scan/scanpage" options={{ headerShown: false }} />
+          <Stack.Screen name="scan/scanPage" />
         </Stack>
         <StatusBar style="light" />
       </GlobalProvider>

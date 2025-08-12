@@ -1,24 +1,24 @@
-import {
-    StyleSheet,
-    Text,
-    View,
-    ActivityIndicator,
-    ScrollView,
-    Modal,
-    TouchableOpacity,
-    Alert,
-} from "react-native";
-import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams, useNavigation } from "expo-router";
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { FontAwesome6 } from "@expo/vector-icons";
-import { getDocumentById } from "../../lib/appwrite";
-import TTSFunction from "../../components/Tts";
-import { useGlobalContext } from "../../context/GlobalProvider";
+import AntDesign from '@expo/vector-icons/AntDesign';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Picker } from '@react-native-picker/picker';
-import AntDesign from '@expo/vector-icons/AntDesign';
+import { useLocalSearchParams, useNavigation } from "expo-router";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+    ActivityIndicator,
+    Alert,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import TTSFunction from "../../components/Tts";
+import { useGlobalContext } from "../../context/GlobalProvider";
+import { getDocumentById } from "../../lib/appwrite";
 
 const createChunks = (text, maxWords = 30) => {
     const words = text.split(/\s+/);
@@ -643,6 +643,7 @@ const styles = StyleSheet.create({
     safe: {
         flex: 1,
         backgroundColor: "#fff",
+
     },
     scroll: {
         flex: 1,
@@ -696,7 +697,7 @@ const styles = StyleSheet.create({
         padding: 20,
         borderRadius: 20,
         // height: "35%",
-         minHeight: '27%',
+        minHeight: '27%',
         alignItems: 'center'
     },
     modalContentSummary: {
