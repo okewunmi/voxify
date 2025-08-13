@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -17,7 +20,8 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.fourfive.voxify"
+      "package": "com.fourfive.voxify",
+      "runtimeVersion": "1.0.0"
     },
     "web": {
       "bundler": "metro",
@@ -54,6 +58,9 @@
         "projectId": "7c9414d3-bdbc-473f-a6ee-c4236297857a"
       }
     },
-    "owner": "fourfive"
+    "owner": "fourfive",
+    "updates": {
+      "url": "https://u.expo.dev/7c9414d3-bdbc-473f-a6ee-c4236297857a"
+    }
   }
 }

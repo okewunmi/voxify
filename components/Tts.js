@@ -1,6 +1,7 @@
 import { FontAwesome, FontAwesome6, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import Slider from '@react-native-community/slider';
 import { Picker } from '@react-native-picker/picker';
+import { useFocusEffect } from '@react-navigation/native';
 import { Audio } from 'expo-av';
 import * as Crypto from 'expo-crypto';
 import * as FileSystem from 'expo-file-system';
@@ -8,7 +9,7 @@ import * as MediaLibrary from 'expo-media-library';
 import * as SQLite from 'expo-sqlite';
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useFocusEffect } from '@react-navigation/native';
+import AdSenseInterstitialModal from '../components/adsense.js';
 
 // Fallback languages array in case the import fails
 const defaultLanguages = [
@@ -356,6 +357,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [cacheStatus, setCacheStatus] = useState('');
   const [loadingMessage, setLoadingMessage] = useState('');
+  const [showAd, setShowAd] = useState(false);
 
   // Refs for audio management
   const chunks = useRef([]);
@@ -373,6 +375,32 @@ const TTSFunction = ({ text, onChunkChange }) => {
   const pausedPosition = useRef(0);
   const isMounted = useRef(true);
   const isScreenFocused = useRef(true);
+
+  // Use ref to store the pending function to execute after ad closes
+  const pendingActionRef = useRef(null);
+
+  // Handler for when ad is closed
+  const handleAdClosed = () => {
+    console.log('Ad closed by user');
+    setShowAd(false);
+
+    // Execute the pending action if it exists
+    if (pendingActionRef.current) {
+      console.log('Executing pending action after ad closed');
+      const pendingAction = pendingActionRef.current;
+      pendingActionRef.current = null; // Clear the pending action
+
+      // Execute the pending function
+      pendingAction();
+    }
+  };
+
+  // Handler for manual close
+  const handleCloseAd = () => {
+    console.log('Ad modal closed');
+    setShowAd(false);
+
+  };
 
   // Track focus state to stop audio when navigating away
   useFocusEffect(
@@ -392,7 +420,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
     isMounted.current = true;
     // Initialize audio and database
     initializeAudio();
-    
+
     // Initialize database with error handling
     audioCacheDB.current.init().catch(error => {
       console.error('Database initialization failed:', error);
@@ -445,7 +473,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
     try {
       const textChunks = createChunks(text);
       const stats = await audioCacheDB.current.getCacheStats(textHash.current, selectedLanguage);
-      
+
       if (stats.cached === textChunks.length && textChunks.length > 0) {
         setCacheStatus('Fully cached');
       } else if (stats.cached > 0) {
@@ -617,9 +645,9 @@ const TTSFunction = ({ text, onChunkChange }) => {
 
   const getOrGenerateAudio = async (chunkText, chunkIndex) => {
     if (!isMounted.current || !isScreenFocused.current) return null;
-    
+
     setLoadingMessage(`Loading audio chunk ${chunkIndex + 1}/${chunks.current.length}...`);
-    
+
     // Check cache first
     try {
       const cachedPath = await audioCacheDB.current.getCachedAudio(
@@ -637,7 +665,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
 
     // Generate new audio only if still mounted and focused
     if (!isMounted.current || !isScreenFocused.current) return null;
-    
+
     const audioUrl = await generateAudioFromText(chunkText);
 
     // Cache the audio in background (don't wait for it)
@@ -662,7 +690,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
 
   const preloadNextChunks = async (startIndex, count = 2) => { // Reduced from 3 to 2
     if (!isMounted.current || !isScreenFocused.current) return;
-    
+
     const loadPromises = [];
 
     for (let i = startIndex; i < Math.min(startIndex + count, chunks.current.length); i++) {
@@ -746,7 +774,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
       // Create new sound
       const { sound } = await Audio.Sound.createAsync(
         { uri: chunkAudios.current[chunkIndex] },
-        { 
+        {
           shouldPlay: false,
           rate: speed,
           isLooping: false,
@@ -843,7 +871,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
     try {
       reset();
       if (!isMounted.current || !isScreenFocused.current) return;
-      
+
       setPlaying(true);
       setIsLoading(true);
       setIsPreparingAudio(true);
@@ -898,6 +926,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
   const stopAudio = async () => {
     await stopPlayback();
     reset();
+    
   };
 
   const downloadAudio = async (text, filename = 'audio.wav') => {
@@ -935,7 +964,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
     }
   };
 
-  const handleDownload = async () => {
+  const executeDownload = async () => {
     if (!text) return;
     if (isDownloading) {
       Alert.alert('Download in Progress', 'Please wait for the current download to complete');
@@ -944,12 +973,22 @@ const TTSFunction = ({ text, onChunkChange }) => {
     await downloadAudio(text, `speech_${Date.now()}.wav`);
   };
 
+  const handleDownload = async () => {
+    // Store the actual upload function as pending action
+    pendingActionRef.current = executeDownload;
+
+    // Show the ad
+    setShowAd(true);
+  };
+
+
+
   const restart = async () => {
     if (isLoading || isPreparingAudio) {
       Alert.alert("Loading", "Please wait for the current operation to complete");
       return;
     }
-    
+
     await stopPlayback();
     reset();
     setTimeout(() => {
@@ -1091,8 +1130,8 @@ const TTSFunction = ({ text, onChunkChange }) => {
       </View>
 
       <View style={styles.controlsRow}>
-        <TouchableOpacity 
-          style={[styles.controlButton, { opacity: isButtonDisabled() ? 0.5 : 1 }]} 
+        <TouchableOpacity
+          style={[styles.controlButton, { opacity: isButtonDisabled() ? 0.5 : 1 }]}
           onPress={restart}
           disabled={isButtonDisabled()}
         >
@@ -1107,8 +1146,8 @@ const TTSFunction = ({ text, onChunkChange }) => {
           {getPlayButtonContent()}
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[styles.controlButton, { opacity: !playing ? 0.5 : 1 }]} 
+        <TouchableOpacity
+          style={[styles.controlButton, { opacity: !playing ? 0.5 : 1 }]}
           onPress={stopAudio}
           disabled={!playing}
         >
@@ -1116,8 +1155,8 @@ const TTSFunction = ({ text, onChunkChange }) => {
           <Text style={styles.controlText}>Stop</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[styles.controlButton, { opacity: isButtonDisabled() ? 0.5 : 1 }]} 
+        <TouchableOpacity
+          style={[styles.controlButton, { opacity: isButtonDisabled() ? 0.5 : 1 }]}
           onPress={increaseSpeed}
           disabled={isButtonDisabled()}
         >
@@ -1154,6 +1193,15 @@ const TTSFunction = ({ text, onChunkChange }) => {
           </View>
         </View>
       )}
+
+      {/* Ad Interstitial Modal */}
+
+      <AdSenseInterstitialModal
+        visible={showAd}
+        onClose={handleCloseAd}
+        onAdClosed={handleAdClosed}
+        autoShow={true}
+      />
     </View>
   );
 };

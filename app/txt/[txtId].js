@@ -14,17 +14,18 @@ import { useLocalSearchParams, useNavigation } from "expo-router";
 import { getTextById } from "../../lib/appwrite";
 import TTSFunction from "../../components/Tts";
 import { useGlobalContext } from "../../context/GlobalProvider";
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import AntDesign from '@expo/vector-icons/AntDesign';
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import AntDesign from "@expo/vector-icons/AntDesign";
 import { FontAwesome6 } from "@expo/vector-icons";
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Picker } from '@react-native-picker/picker';
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { Picker } from "@react-native-picker/picker";
+import AdSenseInterstitialModal from "../../components/adsense.js";
 const CHUNK_SIZE = 200;
 
 const createChunks = (text) => {
-  const words = text.split(' ');
+  const words = text.split(" ");
   const chunks = [];
-  let currentChunk = '';
+  let currentChunk = "";
 
   for (const word of words) {
     if ((currentChunk + word).length < CHUNK_SIZE) {
@@ -58,10 +59,237 @@ const FileView = () => {
   const [selectedLanguageTo, setSelectedLanguageTo] = useState("English");
   const [activeIndex, setActiveIndex] = useState(-1);
   const [translatedText, setTranslatedText] = useState(null);
-
+  const [showAd, setShowAd] = useState(false);
   const languages = [
-    'Acehnese (Arabic script)', 'Acehnese (Latin script)', 'Afrikaans', 'Akan', 'Amharic', 'Armenian', 'Assamese', 'Asturian', 'Awadhi', 'Ayacucho Quechua', 'Balinese', 'Bambara', 'Banjar (Arabic script)', 'Banjar (Latin script)', 'Bashkir', 'Basque', 'Belarusian', 'Bemba', 'Bengali', 'Bhojpuri', 'Bosnian', 'Buginese', 'Bulgarian', 'Burmese', 'Catalan', 'Cebuano', 'Central Atlas Tamazight', 'Central Aymara', 'Central Kanuri (Arabic script)', 'Central Kanuri (Latin script)', 'Central Kurdish', 'Chhattisgarhi', 'Chinese (Simplified)', 'Chinese (Traditional)', 'Chokwe', 'Crimean Tatar', 'Croatian', 'Czech', 'Danish', 'Dari', 'Dutch', 'Dyula', 'Dzongkha', 'Eastern Panjabi', 'Eastern Yiddish', 'Egyptian Arabic', 'English', 'Esperanto', 'Estonian', 'Ewe', 'Faroese', 'Fijian', 'Finnish', 'Fon', 'French', 'Friulian', 'Galician', 'Ganda', 'Georgian', 'German', 'Greek', 'Guarani', 'Gujarati', 'Haitian Creole', 'Halh Mongolian', 'Hausa', 'Hebrew', 'Hindi', 'Hungarian', 'Icelandic', 'Igbo', 'Ilocano', 'Indonesian', 'Irish', 'Italian', 'Japanese', 'Javanese', 'Jingpho', 'Kabiyè', 'Kabuverdianu', 'Kabyle', 'Kamba', 'Kannada', 'Kashmiri (Arabic script)', 'Kashmiri (Devanagari script)', 'Kazakh', 'Khmer', 'Kikongo', 'Kikuyu', 'Kimbundu', 'Kinyarwanda', 'Korean', 'Kyrgyz', 'Lao', 'Latgalian', 'Ligurian', 'Limburgish', 'Lingala', 'Lithuanian', 'Lombard', 'Luba-Kasai', 'Luo', 'Luxembourgish', 'Macedonian', 'Magahi', 'Maithili', 'Malayalam', 'Maltese', 'Maori', 'Marathi', 'Meitei (Bengali script)', 'Mesopotamian Arabic', 'Minangkabau (Latin script)', 'Mizo', 'Modern Standard Arabic', 'Moroccan Arabic', 'Mossi', 'Najdi Arabic', 'Nepali', 'Nigerian Fulfulde', 'North Azerbaijani', 'North Levantine Arabic', 'Northern Kurdish', 'Northern Sotho', 'Northern Uzbek', 'Norwegian Bokmål', 'Norwegian Nynorsk', 'Nuer', 'Nyanja', 'Occitan', 'Odia', 'Pangasinan', 'Papiamento', 'Plateau Malagasy', 'Polish', 'Portuguese', 'Romanian', 'Rundi', 'Russian', 'Samoan', 'Sango', 'Sanskrit', 'Santali', 'Sardinian', 'Scottish Gaelic', 'Serbian', 'Shan', 'Shona', 'Sicilian', 'Silesian', 'Sindhi', 'Sinhala', 'Slovak', 'Slovenian', 'Somali', 'South Azerbaijani', 'South Levantine Arabic', 'Southern Pashto', 'Southern Sotho', 'Southwestern Dinka', 'Spanish', 'Standard Latvian', 'Standard Malay', 'Standard Tibetan', 'Sundanese', 'Swahili', 'Swati', 'Swedish', 'Tagalog', 'Tajik', 'Tamasheq (Latin script)', 'Tamasheq (Tifinagh script)', 'Tamil', 'Tatar', 'Ta’izzi-Adeni Arabic', 'Telugu', 'Thai', 'Tigrinya', 'Tok Pisin', 'Tosk Albanian', 'Tsonga', 'Tswana', 'Tumbuka', 'Tunisian Arabic', 'Turkish', 'Turkmen', 'Twi', 'Ukrainian', 'Umbundu', 'Urdu', 'Uyghur', 'Venetian', 'Vietnamese', 'Waray', 'Welsh', 'West Central Oromo', 'Western Persian', 'Wolof', 'Xhosa', 'Yoruba', 'Yue Chinese', 'Zulu'
-  ]
+    "Acehnese (Arabic script)",
+    "Acehnese (Latin script)",
+    "Afrikaans",
+    "Akan",
+    "Amharic",
+    "Armenian",
+    "Assamese",
+    "Asturian",
+    "Awadhi",
+    "Ayacucho Quechua",
+    "Balinese",
+    "Bambara",
+    "Banjar (Arabic script)",
+    "Banjar (Latin script)",
+    "Bashkir",
+    "Basque",
+    "Belarusian",
+    "Bemba",
+    "Bengali",
+    "Bhojpuri",
+    "Bosnian",
+    "Buginese",
+    "Bulgarian",
+    "Burmese",
+    "Catalan",
+    "Cebuano",
+    "Central Atlas Tamazight",
+    "Central Aymara",
+    "Central Kanuri (Arabic script)",
+    "Central Kanuri (Latin script)",
+    "Central Kurdish",
+    "Chhattisgarhi",
+    "Chinese (Simplified)",
+    "Chinese (Traditional)",
+    "Chokwe",
+    "Crimean Tatar",
+    "Croatian",
+    "Czech",
+    "Danish",
+    "Dari",
+    "Dutch",
+    "Dyula",
+    "Dzongkha",
+    "Eastern Panjabi",
+    "Eastern Yiddish",
+    "Egyptian Arabic",
+    "English",
+    "Esperanto",
+    "Estonian",
+    "Ewe",
+    "Faroese",
+    "Fijian",
+    "Finnish",
+    "Fon",
+    "French",
+    "Friulian",
+    "Galician",
+    "Ganda",
+    "Georgian",
+    "German",
+    "Greek",
+    "Guarani",
+    "Gujarati",
+    "Haitian Creole",
+    "Halh Mongolian",
+    "Hausa",
+    "Hebrew",
+    "Hindi",
+    "Hungarian",
+    "Icelandic",
+    "Igbo",
+    "Ilocano",
+    "Indonesian",
+    "Irish",
+    "Italian",
+    "Japanese",
+    "Javanese",
+    "Jingpho",
+    "Kabiyè",
+    "Kabuverdianu",
+    "Kabyle",
+    "Kamba",
+    "Kannada",
+    "Kashmiri (Arabic script)",
+    "Kashmiri (Devanagari script)",
+    "Kazakh",
+    "Khmer",
+    "Kikongo",
+    "Kikuyu",
+    "Kimbundu",
+    "Kinyarwanda",
+    "Korean",
+    "Kyrgyz",
+    "Lao",
+    "Latgalian",
+    "Ligurian",
+    "Limburgish",
+    "Lingala",
+    "Lithuanian",
+    "Lombard",
+    "Luba-Kasai",
+    "Luo",
+    "Luxembourgish",
+    "Macedonian",
+    "Magahi",
+    "Maithili",
+    "Malayalam",
+    "Maltese",
+    "Maori",
+    "Marathi",
+    "Meitei (Bengali script)",
+    "Mesopotamian Arabic",
+    "Minangkabau (Latin script)",
+    "Mizo",
+    "Modern Standard Arabic",
+    "Moroccan Arabic",
+    "Mossi",
+    "Najdi Arabic",
+    "Nepali",
+    "Nigerian Fulfulde",
+    "North Azerbaijani",
+    "North Levantine Arabic",
+    "Northern Kurdish",
+    "Northern Sotho",
+    "Northern Uzbek",
+    "Norwegian Bokmål",
+    "Norwegian Nynorsk",
+    "Nuer",
+    "Nyanja",
+    "Occitan",
+    "Odia",
+    "Pangasinan",
+    "Papiamento",
+    "Plateau Malagasy",
+    "Polish",
+    "Portuguese",
+    "Romanian",
+    "Rundi",
+    "Russian",
+    "Samoan",
+    "Sango",
+    "Sanskrit",
+    "Santali",
+    "Sardinian",
+    "Scottish Gaelic",
+    "Serbian",
+    "Shan",
+    "Shona",
+    "Sicilian",
+    "Silesian",
+    "Sindhi",
+    "Sinhala",
+    "Slovak",
+    "Slovenian",
+    "Somali",
+    "South Azerbaijani",
+    "South Levantine Arabic",
+    "Southern Pashto",
+    "Southern Sotho",
+    "Southwestern Dinka",
+    "Spanish",
+    "Standard Latvian",
+    "Standard Malay",
+    "Standard Tibetan",
+    "Sundanese",
+    "Swahili",
+    "Swati",
+    "Swedish",
+    "Tagalog",
+    "Tajik",
+    "Tamasheq (Latin script)",
+    "Tamasheq (Tifinagh script)",
+    "Tamil",
+    "Tatar",
+    "Ta’izzi-Adeni Arabic",
+    "Telugu",
+    "Thai",
+    "Tigrinya",
+    "Tok Pisin",
+    "Tosk Albanian",
+    "Tsonga",
+    "Tswana",
+    "Tumbuka",
+    "Tunisian Arabic",
+    "Turkish",
+    "Turkmen",
+    "Twi",
+    "Ukrainian",
+    "Umbundu",
+    "Urdu",
+    "Uyghur",
+    "Venetian",
+    "Vietnamese",
+    "Waray",
+    "Welsh",
+    "West Central Oromo",
+    "Western Persian",
+    "Wolof",
+    "Xhosa",
+    "Yoruba",
+    "Yue Chinese",
+    "Zulu",
+  ];
+
+  // Use ref to store the pending function to execute after ad closes
+  const pendingActionRef = useRef(null);
+
+  // Handler for when ad is closed
+  const handleAdClosed = () => {
+    console.log("Ad closed by user");
+    setShowAd(false);
+
+    // Execute the pending action if it exists
+    if (pendingActionRef.current) {
+      console.log("Executing pending action after ad closed");
+      const pendingAction = pendingActionRef.current;
+      pendingActionRef.current = null; // Clear the pending action
+
+      // Execute the pending function
+      pendingAction();
+    }
+  };
+
+  // Handler for manual close
+  const handleCloseAd = () => {
+    console.log("Ad modal closed");
+    setShowAd(false);
+  };
+
   useEffect(() => {
     fetchDocument();
   }, [txtId]);
@@ -77,7 +305,6 @@ const FileView = () => {
       ),
     });
   }, [navigation]);
-
 
   const fetchDocument = async () => {
     try {
@@ -110,15 +337,24 @@ const FileView = () => {
     );
   }
 
-
-
   const handleTranslate = async () => {
     console.log("Starting translating...");
     setIsModalVisible(false);
     setIsTranslateModalSelect(true);
-  }
+  };
 
+  // Modified handleFileUpload to show ad first
   const handleTranslation = async () => {
+    // console.log('File upload initiated - showing ad first');
+
+    // Store the actual upload function as pending action
+    pendingActionRef.current = executehandleTranslation;
+
+    // Show the ad
+    setShowAd(true);
+  };
+
+  const executehandleTranslation = async () => {
     console.log("Starting translation...");
     setIsTranslateModalSelect(false);
     setIsTranslateModal(true);
@@ -136,54 +372,68 @@ const FileView = () => {
       // Method 1: Try direct prediction first
       try {
         console.log("Trying direct prediction method...");
-        const directResponse = await fetch("https://unesco-nllb.hf.space/run/predict", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-
-
-          },
-          body: JSON.stringify({
-            data: [text, selectedLanguageFrom, selectedLanguageTo],
-            fn_index: 0
-          })
-        });
+        const directResponse = await fetch(
+          "https://unesco-nllb.hf.space/run/predict",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              data: [text, selectedLanguageFrom, selectedLanguageTo],
+              fn_index: 0,
+            }),
+          }
+        );
 
         if (directResponse.ok) {
           const directResult = await directResponse.json();
           console.log("Direct prediction response:", directResult);
 
-          if (directResult?.data && Array.isArray(directResult.data) && directResult.data[0]) {
+          if (
+            directResult?.data &&
+            Array.isArray(directResult.data) &&
+            directResult.data[0]
+          ) {
             setTranslatedText(cleanTranslatedText(directResult.data[0]));
-            console.log("Direct translation successful:", directResult.data[0].substring(0, 100) + "...");
+            console.log(
+              "Direct translation successful:",
+              directResult.data[0].substring(0, 100) + "..."
+            );
             return;
           }
         }
       } catch (directError) {
-        console.log("Direct method failed, trying async method:", directError.message);
+        console.log(
+          "Direct method failed, trying async method:",
+          directError.message
+        );
       }
 
       // Method 2: Async method with improved polling
-      const response = await fetch("https://unesco-nllb.hf.space/call/translate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-
-
-        },
-        body: JSON.stringify({
-          data: [text, selectedLanguageFrom, selectedLanguageTo],
-          event_data: null,
-          fn_index: 0
-        })
-      });
+      const response = await fetch(
+        "https://unesco-nllb.hf.space/call/translate",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            data: [text, selectedLanguageFrom, selectedLanguageTo],
+            event_data: null,
+            fn_index: 0,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
         console.error("API Error Response:", errorText);
-        throw new Error(`Translation failed with status ${response.status}: ${errorText}`);
+        throw new Error(
+          `Translation failed with status ${response.status}: ${errorText}`
+        );
       }
 
       const result = await response.json();
@@ -195,21 +445,26 @@ const FileView = () => {
         // Poll for the result using the event_id
         const translatedText = await pollForTranslationResult(result.event_id);
         setTranslatedText(translatedText);
-        console.log("Translation successful:", translatedText.substring(0, 100) + "...");
-
+        console.log(
+          "Translation successful:",
+          translatedText.substring(0, 100) + "..."
+        );
       } else if (result?.data && Array.isArray(result.data) && result.data[0]) {
         // Direct result
         setTranslatedText(cleanTranslatedText(result.data[0]));
-        console.log("Direct translation successful:", result.data[0].substring(0, 100) + "...");
-
+        console.log(
+          "Direct translation successful:",
+          result.data[0].substring(0, 100) + "..."
+        );
       } else {
         console.warn("Translation returned unexpected format:", result);
         throw new Error("Translation returned no usable data");
       }
-
     } catch (error) {
       console.error("Translation error:", error);
-      setTranslatedText(`Translation failed: ${error.message}. Please try again.`);
+      setTranslatedText(
+        `Translation failed: ${error.message}. Please try again.`
+      );
     } finally {
       setTimeout(() => {
         setIsTranslateModal(false);
@@ -227,22 +482,30 @@ const FileView = () => {
       `https://unesco-nllb.hf.space/call/translate/${eventId}`,
       `https://unesco-nllb.hf.space/api/queue/data/${eventId}`,
       `https://unesco-nllb.hf.space/queue/join/${eventId}`,
-      `https://unesco-nllb.hf.space/queue/status/${eventId}`
+      `https://unesco-nllb.hf.space/queue/status/${eventId}`,
     ];
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         // Wait before polling (except first attempt)
         if (attempt > 0) {
-          const waitTime = Math.min(1000 + (attempt * 300), 2500);
-          console.log(`Waiting ${waitTime}ms before poll attempt ${attempt + 1}`);
-          await new Promise(resolve => setTimeout(resolve, waitTime));
+          const waitTime = Math.min(1000 + attempt * 300, 2500);
+          console.log(
+            `Waiting ${waitTime}ms before poll attempt ${attempt + 1}`
+          );
+          await new Promise((resolve) => setTimeout(resolve, waitTime));
         }
 
         console.log(`Poll attempt ${attempt + 1}/${maxAttempts}`);
 
         // Try the primary endpoint first, then alternatives if it keeps failing
-        const endpointIndex = attempt < 15 ? 0 : Math.min(Math.floor((attempt - 15) / 2), endpointPatterns.length - 1);
+        const endpointIndex =
+          attempt < 15
+            ? 0
+            : Math.min(
+                Math.floor((attempt - 15) / 2),
+                endpointPatterns.length - 1
+              );
         const pollUrl = endpointPatterns[endpointIndex];
 
         if (endpointIndex > 0) {
@@ -252,16 +515,23 @@ const FileView = () => {
         const pollResponse = await fetch(pollUrl, {
           method: "GET",
           headers: {
-            "Accept": "text/event-stream, application/json, text/plain",
+            Accept: "text/event-stream, application/json, text/plain",
             "Cache-Control": "no-cache",
-          }
+          },
         });
 
-        console.log(`Poll attempt ${attempt + 1}, status: ${pollResponse.status}, endpoint: ${pollUrl}`);
+        console.log(
+          `Poll attempt ${attempt + 1}, status: ${
+            pollResponse.status
+          }, endpoint: ${pollUrl}`
+        );
 
         if (pollResponse.ok) {
           const responseText = await pollResponse.text();
-          console.log(`Raw response (first 400 chars):`, responseText.substring(0, 400));
+          console.log(
+            `Raw response (first 400 chars):`,
+            responseText.substring(0, 400)
+          );
 
           // Try to parse the result
           const translation = parseTranslationResponse(responseText);
@@ -271,23 +541,30 @@ const FileView = () => {
           }
 
           // Check if we got a heartbeat or processing message
-          if (responseText.includes('event: heartbeat') ||
-            responseText.includes('event: process_starts') ||
-            responseText.includes('event: process_generating') ||
+          if (
+            responseText.includes("event: heartbeat") ||
+            responseText.includes("event: process_starts") ||
+            responseText.includes("event: process_generating") ||
             responseText.includes('"status": "processing"') ||
-            responseText.includes('"status": "pending"')) {
+            responseText.includes('"status": "pending"')
+          ) {
             console.log("Received processing message, continuing to poll...");
             continue;
           }
 
           // Check if the job is complete but we just can't parse it yet
-          if (responseText.includes('event: complete') || responseText.includes('"status": "complete"')) {
+          if (
+            responseText.includes("event: complete") ||
+            responseText.includes('"status": "complete"')
+          ) {
             console.log("Job marked as complete, trying to parse...");
             // Continue to next iteration to try parsing again
             continue;
           }
 
-          console.log("Response received but no translation found, continuing to poll...");
+          console.log(
+            "Response received but no translation found, continuing to poll..."
+          );
         } else if (pollResponse.status === 404) {
           // Only log 404s for the first few attempts on primary endpoint
           if (attempt < 5 || endpointIndex > 0) {
@@ -296,7 +573,9 @@ const FileView = () => {
         } else if (pollResponse.status === 503) {
           console.log("Service temporarily unavailable, continuing to poll...");
         } else {
-          console.warn(`Unexpected status ${pollResponse.status}, continuing to poll...`);
+          console.warn(
+            `Unexpected status ${pollResponse.status}, continuing to poll...`
+          );
 
           // Try to get error details
           try {
@@ -306,7 +585,6 @@ const FileView = () => {
             console.log("Could not read error response");
           }
         }
-
       } catch (error) {
         console.warn(`Poll attempt ${attempt + 1} failed:`, error.message);
         // Continue polling unless it's the last attempt
@@ -316,7 +594,9 @@ const FileView = () => {
       }
     }
 
-    throw new Error(`Translation timeout after ${maxAttempts} attempts. The service may be busy or the event ID is invalid.`);
+    throw new Error(
+      `Translation timeout after ${maxAttempts} attempts. The service may be busy or the event ID is invalid.`
+    );
   };
 
   // Helper function to parse different response formats
@@ -325,27 +605,31 @@ const FileView = () => {
 
     try {
       // Method 1: Look for SSE event: complete with data
-      if (responseText.includes('event: complete')) {
+      if (responseText.includes("event: complete")) {
         console.log("Found 'event: complete', looking for data...");
 
         // Look for the last data line after event: complete
-        const lines = responseText.split('\n');
+        const lines = responseText.split("\n");
         let foundComplete = false;
 
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i].trim();
 
-          if (line === 'event: complete') {
+          if (line === "event: complete") {
             foundComplete = true;
             continue;
           }
 
-          if (foundComplete && line.startsWith('data: ')) {
+          if (foundComplete && line.startsWith("data: ")) {
             try {
               const dataStr = line.substring(6); // Remove 'data: '
               const parsed = JSON.parse(dataStr);
 
-              if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'string') {
+              if (
+                Array.isArray(parsed) &&
+                parsed.length > 0 &&
+                typeof parsed[0] === "string"
+              ) {
                 console.log("Found translation in complete event data");
                 return cleanTranslatedText(parsed[0]);
               }
@@ -364,7 +648,11 @@ const FileView = () => {
       while ((match = dataRegex.exec(responseText)) !== null) {
         try {
           const dataArray = JSON.parse(`[${match[1]}]`);
-          if (dataArray.length > 0 && typeof dataArray[0] === 'string' && dataArray[0].trim()) {
+          if (
+            dataArray.length > 0 &&
+            typeof dataArray[0] === "string" &&
+            dataArray[0].trim()
+          ) {
             allMatches.push(dataArray[0]);
           }
         } catch (e) {
@@ -381,25 +669,29 @@ const FileView = () => {
 
       // Method 3: Try to parse entire response as JSON
       const jsonResponse = JSON.parse(responseText);
-      if (jsonResponse?.data && Array.isArray(jsonResponse.data) && jsonResponse.data[0]) {
+      if (
+        jsonResponse?.data &&
+        Array.isArray(jsonResponse.data) &&
+        jsonResponse.data[0]
+      ) {
         console.log("Found translation in JSON response");
         return cleanTranslatedText(jsonResponse.data[0]);
       }
-
     } catch (parseError) {
       console.log("JSON parsing failed, trying line-by-line parsing");
 
       // Method 4: Line by line parsing for malformed JSON
-      const lines = responseText.split('\n');
+      const lines = responseText.split("\n");
       for (const line of lines) {
-        if (line.includes('data:') && line.includes('"')) {
+        if (line.includes("data:") && line.includes('"')) {
           try {
             // Extract quoted strings from the line
             const quotedStrings = line.match(/"([^"\\]*(\\.[^"\\]*)*)"/g);
             if (quotedStrings && quotedStrings.length > 0) {
               for (const quoted of quotedStrings) {
                 const cleaned = quoted.slice(1, -1); // Remove quotes
-                if (cleaned.length > 10) { // Assume translation is longer than 10 chars
+                if (cleaned.length > 10) {
+                  // Assume translation is longer than 10 chars
                   console.log("Found translation in quoted string");
                   return cleanTranslatedText(cleaned);
                 }
@@ -418,19 +710,23 @@ const FileView = () => {
 
   // Helper function to clean translated text
   const cleanTranslatedText = (text) => {
-    if (!text || typeof text !== 'string') return text;
+    if (!text || typeof text !== "string") return text;
 
-    return text
-      // Decode Unicode escapes
-      .replace(/\\u([0-9a-fA-F]{4})/g, (match, hex) => String.fromCharCode(parseInt(hex, 16)))
-      // Decode common escape sequences
-      .replace(/\\"/g, '"')
-      .replace(/\\\\/g, '\\')
-      .replace(/\\n/g, '\n')
-      .replace(/\\t/g, '\t')
-      .replace(/\\r/g, '\r')
-      // Trim whitespace
-      .trim();
+    return (
+      text
+        // Decode Unicode escapes
+        .replace(/\\u([0-9a-fA-F]{4})/g, (match, hex) =>
+          String.fromCharCode(parseInt(hex, 16))
+        )
+        // Decode common escape sequences
+        .replace(/\\"/g, '"')
+        .replace(/\\\\/g, "\\")
+        .replace(/\\n/g, "\n")
+        .replace(/\\t/g, "\t")
+        .replace(/\\r/g, "\r")
+        // Trim whitespace
+        .trim()
+    );
   };
   const chunks = createChunks(document.text || "");
 
@@ -470,13 +766,11 @@ const FileView = () => {
             ))
           )}
         </View>
-
       </ScrollView>
       <TTSFunction
         // text={document?.text || "Untitled"}
         text={translatedText || documentSummary || document?.text || ""}
         onChunkChange={handleChunkChange}
-
       />
       {/* Modal triggered by header icon */}
       <Modal
@@ -498,18 +792,20 @@ const FileView = () => {
               <TouchableOpacity
                 style={styles.summaryButton}
                 onPress={handleTranslate}
-              // onPress={() => setIsModalVisible(false)}
+                // onPress={() => setIsModalVisible(false)}
               >
                 <View style={styles.summaryView}>
                   <MaterialIcons name="translate" size={22} color="gold" />
                   <Text style={styles.summaryText}>Translate</Text>
                 </View>
 
-                <MaterialIcons name="arrow-forward-ios" size={20} color="grey" />
+                <MaterialIcons
+                  name="arrow-forward-ios"
+                  size={20}
+                  color="grey"
+                />
               </TouchableOpacity>
-
             </View>
-
           </View>
         </View>
       </Modal>
@@ -555,7 +851,11 @@ const FileView = () => {
                     onValueChange={setSelectedLanguageFrom}
                   >
                     {languages.map((lang) => (
-                      <Picker.Item key={lang} label={lang.split(' (')[0]} value={lang} />
+                      <Picker.Item
+                        key={lang}
+                        label={lang.split(" (")[0]}
+                        value={lang}
+                      />
                     ))}
                   </Picker>
                 </View>
@@ -571,13 +871,16 @@ const FileView = () => {
                     onValueChange={setSelectedLanguageTo}
                   >
                     {languages.map((lang) => (
-                      <Picker.Item key={lang} label={lang.split(' (')[0]} value={lang} />
+                      <Picker.Item
+                        key={lang}
+                        label={lang.split(" (")[0]}
+                        value={lang}
+                      />
                     ))}
                   </Picker>
                 </View>
               </View>
               <View style={styles.TranslateBtns}>
-
                 <TouchableOpacity
                   style={styles.TranslateBtn}
                   onPress={handleTranslation}
@@ -591,13 +894,9 @@ const FileView = () => {
                   <Text style={styles.TranslateBtnTxt}> Cancel</Text>
                 </TouchableOpacity>
               </View>
-
             </View>
-
           </View>
-
         </View>
-
       </Modal>
       {/* Modal triggered Translation*/}
       <Modal
@@ -613,10 +912,17 @@ const FileView = () => {
           </View>
         </View>
       </Modal>
+      {/* Ad Interstitial Modal */}
+
+      <AdSenseInterstitialModal
+        visible={showAd}
+        onClose={handleCloseAd}
+        onAdClosed={handleAdClosed}
+        autoShow={true}
+      />
     </SafeAreaView>
   );
 };
-
 
 const styles = StyleSheet.create({
   safe: {
@@ -657,11 +963,10 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    height: '100%',
+    height: "100%",
     justifyContent: "flex-end",
     alignItems: "center",
     backgroundColor: "rgba(0,0,0,0.5)",
-
   },
   modalOverlaySummary: {
     flex: 1,
@@ -675,8 +980,8 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 20,
     // height: "35%",
-    minHeight: '27%',
-    alignItems: 'center'
+    minHeight: "27%",
+    alignItems: "center",
   },
   modalContentSummary: {
     width: 180,
@@ -684,12 +989,12 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 15,
     height: 180,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     gap: 20,
 
     // iOS Shadow
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -705,99 +1010,90 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 10,
     borderBottomWidth: 1,
-    borderColor: '#cecece',
-    width: '100%',
-    textAlign: 'center',
-    paddingBottom: 15
-
+    borderColor: "#cecece",
+    width: "100%",
+    textAlign: "center",
+    paddingBottom: 15,
   },
   modalTxt: {
     fontSize: 14,
   },
   modalBtns: {
-    flexDirection: 'column',
+    flexDirection: "column",
     gap: 10,
-    alignItems: 'center',
-    marginTop: 20
+    alignItems: "center",
+    marginTop: 20,
   },
   summaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     borderRadius: 10,
-    borderColor: '#cecece',
+    borderColor: "#cecece",
     borderWidth: 1,
-    width: '100%',
+    width: "100%",
     paddingVertical: 13,
-    paddingHorizontal: 10
-
+    paddingHorizontal: 10,
   },
   summaryText: {
     color: "black",
     fontSize: 14,
     fontWeight: "bold",
-
   },
   summaryView: {
-    alignItems: 'center',
-    flexDirection: 'row',
+    alignItems: "center",
+    flexDirection: "row",
     gap: 10,
   },
   closeButton: {
     marginVertical: 5,
-    alignSelf: 'flex-end'
-
+    alignSelf: "flex-end",
   },
   closeText: {
     color: "blue",
   },
   language: {
-    flexDirection: 'column',
-    width: '100%',
+    flexDirection: "column",
+    width: "100%",
     paddingHorizontal: 20,
     gap: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
   languageContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-
+    flexDirection: "row",
+    alignItems: "center",
   },
   label: {
     width: 50,
     fontSize: 14,
-    fontWeight: 'bold'
+    fontWeight: "bold",
   },
   pickerContainer: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#3273F6',
+    borderColor: "#3273F6",
     borderRadius: 8,
-
   },
   picker: {
-    width: '100%',
+    width: "100%",
     height: 50,
-    alignItems: 'center',
-
+    alignItems: "center",
   },
   TranslateBtns: {
     gap: 20,
-    flexDirection: 'row',
+    flexDirection: "row",
     marginTop: 10,
-    marginLeft: 40
+    marginLeft: 40,
   },
   TranslateBtn: {
     borderRadius: 30,
     paddingVertical: 10,
     paddingHorizontal: 25,
-    backgroundColor: '#3273F6',
+    backgroundColor: "#3273F6",
   },
   TranslateBtnTxt: {
-    color: '#fff'
-  }
-
+    color: "#fff",
+  },
 });
-
 
 export default FileView;

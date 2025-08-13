@@ -780,8 +780,7 @@ const home = () => {
   const handleCloseAd = () => {
     console.log('Ad modal closed');
     setShowAd(false);
-    // Note: We don't execute pending action here since this is manual close
-    // You can modify this behavior if needed
+    
   };
 
   const checkNetworkConnection = async () => {
@@ -1023,6 +1022,8 @@ const home = () => {
       Alert.alert("Saving text Failed", error.message || "An error occurred.");
     } finally {
       setIsSubmitting(false);
+      // Show the ad
+    setShowAd(true);
     }
   };
 
