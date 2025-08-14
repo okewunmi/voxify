@@ -1,4 +1,3 @@
-
 import {
   StyleSheet,
   Text,
@@ -14,16 +13,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
 import Feather from "@expo/vector-icons/Feather";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  getCurrentUser,
-  getAllUserContent,
-} from "../../lib/appwrite";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getCurrentUser, getAllUserContent } from "../../lib/appwrite";
 
 import Card from "../../components/Card";
 import CardTxt from "../../components/CardTxt";
 import CardWeb from "../../components/CardWeb";
 import CardScan from "../../components/CardScan";
+import ProductionBannerAd from "../../components/BannerAd";
 
 const DATA = [
   { id: "1", title: "All" },
@@ -74,7 +71,7 @@ const Library = () => {
         return <CardTxt item={item} />;
       case "Web":
         return <CardWeb item={item} />;
-        case "Scan":
+      case "Scan":
         return <CardScan item={item} />;
       default:
         return null;
@@ -85,16 +82,16 @@ const Library = () => {
   useEffect(() => {
     const loadCachedData = async () => {
       try {
-        const cached = await AsyncStorage.getItem('documents');
+        const cached = await AsyncStorage.getItem("documents");
         if (cached) {
           setCachedDocuments(JSON.parse(cached));
           setDocuments(JSON.parse(cached));
         }
       } catch (error) {
-        console.error('Error loading cached data:', error);
+        console.error("Error loading cached data:", error);
       }
     };
-    
+
     loadCachedData();
   }, []);
 
@@ -110,10 +107,10 @@ const Library = () => {
           const allContent = await getAllUserContent(currentUser.$id);
           setDocuments(allContent);
           // Cache the new data
-          await AsyncStorage.setItem('documents', JSON.stringify(allContent));
+          await AsyncStorage.setItem("documents", JSON.stringify(allContent));
         }
       } catch (error) {
-        setError('Failed to load content');
+        setError("Failed to load content");
         Alert.alert("Error", "Failed to load content");
       } finally {
         setIsLoading(false);
@@ -128,9 +125,9 @@ const Library = () => {
     try {
       const allContent = await getAllUserContent(user.$id);
       setDocuments(allContent);
-      await AsyncStorage.setItem('documents', JSON.stringify(allContent));
+      await AsyncStorage.setItem("documents", JSON.stringify(allContent));
     } catch (error) {
-      setError('Failed to fetch documents');
+      setError("Failed to fetch documents");
       Alert.alert("Error", "Failed to fetch documents");
     }
   };
@@ -166,7 +163,7 @@ const Library = () => {
           <Feather name="search" size={28} color="black" />
         </TouchableOpacity>
       </View>
-      
+
       <View>
         <View style={styles.topBtn}>
           <TouchableOpacity style={[styles.btn, styles.btnBlue]}>
@@ -193,6 +190,7 @@ const Library = () => {
           windowSize={5}
           removeClippedSubviews={true}
         />
+        <ProductionBannerAd adUnitId="ca-app-pub-2962255342437267/1367693967" />
       </View>
     </SafeAreaView>
   );
@@ -285,7 +283,7 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
