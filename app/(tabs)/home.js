@@ -742,7 +742,7 @@ import Card from "../../components/Card";
 import CardScan from "../../components/CardScan";
 import CardTxt from "../../components/CardTxt";
 import CardWeb from "../../components/CardWeb";
-import AdSenseInterstitialModal from '../../components/adsense.js'
+import AdSenseInterstitialModal from "../../components/adsense.js"
 
 const home = () => {
   const [uploading, setUploading] = useState(false);
