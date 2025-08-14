@@ -9,7 +9,7 @@ import * as MediaLibrary from 'expo-media-library';
 import * as SQLite from 'expo-sqlite';
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import AdSenseInterstitialModal from '../components/adsense.js';
+import AdSenseInterstitialModal from './Adsense.js';
 
 // Fallback languages array in case the import fails
 const defaultLanguages = [
@@ -926,7 +926,7 @@ const TTSFunction = ({ text, onChunkChange }) => {
   const stopAudio = async () => {
     await stopPlayback();
     reset();
-    
+
   };
 
   const downloadAudio = async (text, filename = 'audio.wav') => {

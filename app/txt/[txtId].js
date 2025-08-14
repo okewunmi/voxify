@@ -1,25 +1,24 @@
+import { FontAwesome6 } from "@expo/vector-icons";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { Picker } from "@react-native-picker/picker";
+import { useLocalSearchParams, useNavigation } from "expo-router";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
+  Modal,
+  ScrollView,
   StyleSheet,
   Text,
-  View,
-  ActivityIndicator,
-  ScrollView,
-  Animated,
   TouchableOpacity,
-  Modal,
+  View
 } from "react-native";
-import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams, useNavigation } from "expo-router";
-import { getTextById } from "../../lib/appwrite";
+import AdSenseInterstitialModal from "../../components/Adsense.js";
 import TTSFunction from "../../components/Tts";
 import { useGlobalContext } from "../../context/GlobalProvider";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import AntDesign from "@expo/vector-icons/AntDesign";
-import { FontAwesome6 } from "@expo/vector-icons";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { Picker } from "@react-native-picker/picker";
-import AdSenseInterstitialModal from "../../components/adsense.js";
+import { getTextById } from "../../lib/appwrite";
 const CHUNK_SIZE = 200;
 
 const createChunks = (text) => {
@@ -503,9 +502,9 @@ const FileView = () => {
           attempt < 15
             ? 0
             : Math.min(
-                Math.floor((attempt - 15) / 2),
-                endpointPatterns.length - 1
-              );
+              Math.floor((attempt - 15) / 2),
+              endpointPatterns.length - 1
+            );
         const pollUrl = endpointPatterns[endpointIndex];
 
         if (endpointIndex > 0) {
@@ -521,8 +520,7 @@ const FileView = () => {
         });
 
         console.log(
-          `Poll attempt ${attempt + 1}, status: ${
-            pollResponse.status
+          `Poll attempt ${attempt + 1}, status: ${pollResponse.status
           }, endpoint: ${pollUrl}`
         );
 
@@ -792,7 +790,7 @@ const FileView = () => {
               <TouchableOpacity
                 style={styles.summaryButton}
                 onPress={handleTranslate}
-                // onPress={() => setIsModalVisible(false)}
+              // onPress={() => setIsModalVisible(false)}
               >
                 <View style={styles.summaryView}>
                   <MaterialIcons name="translate" size={22} color="gold" />

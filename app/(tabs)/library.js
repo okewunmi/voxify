@@ -7,6 +7,7 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  ScrollView,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -21,6 +22,7 @@ import CardTxt from "../../components/CardTxt";
 import CardWeb from "../../components/CardWeb";
 import CardScan from "../../components/CardScan";
 import ProductionBannerAd from "../../components/BannerAd";
+
 
 const DATA = [
   { id: "1", title: "All" },
@@ -174,8 +176,23 @@ const Library = () => {
           </TouchableOpacity>
         </View>
       </View>
+      
+      <ProductionBannerAd 
+      adUnitId="ca-app-pub-2962255342437267/1367693967"
+      backgroundColor="#d6c3f5ff"  // Even lighter blue for subtle contrast
+      keywords={['fashion', 'clothing', 'shopping', 'lifestyle', 'accessories']}
+      onAdLoaded={() => console.log('Banner ad loaded!')}
+      onAdFailedToLoad={(error) => console.log('Banner ad failed:', error)}
+      style={{ marginHorizontal: 16, marginBottom: 20 }}
+      maxRetryAttempts={5}
+      enableProgressiveDelay={true}
+      retryDelayMs={3000} // 3 seconds between retries
+      autoRetryOnNoFill={true}
+      />
 
+      
       <View style={styles.recentDoc}>
+        
         <FlatList
           data={documents}
           renderItem={renderItems}
@@ -185,16 +202,19 @@ const Library = () => {
           style={styles.flatList}
           contentContainerStyle={styles.flatListContent}
           showsVerticalScrollIndicator={false}
-          initialNumToRender={10}
-          maxToRenderPerBatch={10}
-          windowSize={5}
-          removeClippedSubviews={true}
+          // initialNumToRender={20}
+          // maxToRenderPerBatch={20}
+          // windowSize={5}
+          // removeClippedSubviews={true}
         />
-        <ProductionBannerAd adUnitId="ca-app-pub-2962255342437267/1367693967" />
+        
       </View>
+      
     </SafeAreaView>
   );
 };
+
+
 
 export default Library;
 
@@ -276,6 +296,7 @@ const styles = StyleSheet.create({
   recentDoc: {
     width: "100%",
     alignItems: "center",
+    paddingBottom: 150,
   },
   flatList: {},
   flatListContent: {
