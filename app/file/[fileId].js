@@ -19,7 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import TTSFunction from "../../components/Tts";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import { getDocumentById } from "../../lib/appwrite";
-import AdSenseInterstitialModal from "../../components/adsense.js";
+import AdSenseInterstitialModal from "../../components/Adsense.js";
 
 const createChunks = (text, maxWords = 30) => {
   const words = text.split(/\s+/);
