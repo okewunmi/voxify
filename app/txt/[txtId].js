@@ -15,7 +15,7 @@ import {
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AdSenseInterstitialModal from "../../components/Adsense.js";
+import AdSenseInterstitialModal from "../../components/Adsense";
 import TTSFunction from "../../components/Tts";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import { getTextById } from "../../lib/appwrite";

@@ -1,24 +1,24 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ActivityIndicator,
-  ScrollView,
-  TouchableOpacity,
-  Modal
-} from "react-native";
-import React, { useEffect, useState, useLayoutEffect } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useLocalSearchParams, useNavigation } from "expo-router";
-import { getScanById } from "../../lib/appwrite";
-import TTSFunction from "../../components/Tts";
-import { useGlobalContext } from "../../context/GlobalProvider";
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { FontAwesome6 } from "@expo/vector-icons";
 import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { FontAwesome6 } from "@expo/vector-icons";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Picker } from '@react-native-picker/picker';
-import AdSenseInterstitialModal from "../../components/Adsense.js";
+import { useLocalSearchParams, useNavigation } from "expo-router";
+import { useEffect, useLayoutEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import AdSenseInterstitialModal from "../../components/Adsense";
+import TTSFunction from "../../components/Tts";
+import { useGlobalContext } from "../../context/GlobalProvider";
+import { getScanById } from "../../lib/appwrite";
 
 const FileView = () => {
   const { scanId } = useLocalSearchParams();
@@ -34,7 +34,7 @@ const FileView = () => {
   const [selectedLanguageTo, setSelectedLanguageTo] = useState("English");
   const [activeIndex, setActiveIndex] = useState(-1);
   const [translatedText, setTranslatedText] = useState(null);
-   const [showAd, setShowAd] = useState(false);
+  const [showAd, setShowAd] = useState(false);
   const languages = [
     'Acehnese (Arabic script)', 'Acehnese (Latin script)', 'Afrikaans', 'Akan', 'Amharic', 'Armenian', 'Assamese', 'Asturian', 'Awadhi', 'Ayacucho Quechua', 'Balinese', 'Bambara', 'Banjar (Arabic script)', 'Banjar (Latin script)', 'Bashkir', 'Basque', 'Belarusian', 'Bemba', 'Bengali', 'Bhojpuri', 'Bosnian', 'Buginese', 'Bulgarian', 'Burmese', 'Catalan', 'Cebuano', 'Central Atlas Tamazight', 'Central Aymara', 'Central Kanuri (Arabic script)', 'Central Kanuri (Latin script)', 'Central Kurdish', 'Chhattisgarhi', 'Chinese (Simplified)', 'Chinese (Traditional)', 'Chokwe', 'Crimean Tatar', 'Croatian', 'Czech', 'Danish', 'Dari', 'Dutch', 'Dyula', 'Dzongkha', 'Eastern Panjabi', 'Eastern Yiddish', 'Egyptian Arabic', 'English', 'Esperanto', 'Estonian', 'Ewe', 'Faroese', 'Fijian', 'Finnish', 'Fon', 'French', 'Friulian', 'Galician', 'Ganda', 'Georgian', 'German', 'Greek', 'Guarani', 'Gujarati', 'Haitian Creole', 'Halh Mongolian', 'Hausa', 'Hebrew', 'Hindi', 'Hungarian', 'Icelandic', 'Igbo', 'Ilocano', 'Indonesian', 'Irish', 'Italian', 'Japanese', 'Javanese', 'Jingpho', 'Kabiyè', 'Kabuverdianu', 'Kabyle', 'Kamba', 'Kannada', 'Kashmiri (Arabic script)', 'Kashmiri (Devanagari script)', 'Kazakh', 'Khmer', 'Kikongo', 'Kikuyu', 'Kimbundu', 'Kinyarwanda', 'Korean', 'Kyrgyz', 'Lao', 'Latgalian', 'Ligurian', 'Limburgish', 'Lingala', 'Lithuanian', 'Lombard', 'Luba-Kasai', 'Luo', 'Luxembourgish', 'Macedonian', 'Magahi', 'Maithili', 'Malayalam', 'Maltese', 'Maori', 'Marathi', 'Meitei (Bengali script)', 'Mesopotamian Arabic', 'Minangkabau (Latin script)', 'Mizo', 'Modern Standard Arabic', 'Moroccan Arabic', 'Mossi', 'Najdi Arabic', 'Nepali', 'Nigerian Fulfulde', 'North Azerbaijani', 'North Levantine Arabic', 'Northern Kurdish', 'Northern Sotho', 'Northern Uzbek', 'Norwegian Bokmål', 'Norwegian Nynorsk', 'Nuer', 'Nyanja', 'Occitan', 'Odia', 'Pangasinan', 'Papiamento', 'Plateau Malagasy', 'Polish', 'Portuguese', 'Romanian', 'Rundi', 'Russian', 'Samoan', 'Sango', 'Sanskrit', 'Santali', 'Sardinian', 'Scottish Gaelic', 'Serbian', 'Shan', 'Shona', 'Sicilian', 'Silesian', 'Sindhi', 'Sinhala', 'Slovak', 'Slovenian', 'Somali', 'South Azerbaijani', 'South Levantine Arabic', 'Southern Pashto', 'Southern Sotho', 'Southwestern Dinka', 'Spanish', 'Standard Latvian', 'Standard Malay', 'Standard Tibetan', 'Sundanese', 'Swahili', 'Swati', 'Swedish', 'Tagalog', 'Tajik', 'Tamasheq (Latin script)', 'Tamasheq (Tifinagh script)', 'Tamil', 'Tatar', 'Ta’izzi-Adeni Arabic', 'Telugu', 'Thai', 'Tigrinya', 'Tok Pisin', 'Tosk Albanian', 'Tsonga', 'Tswana', 'Tumbuka', 'Tunisian Arabic', 'Turkish', 'Turkmen', 'Twi', 'Ukrainian', 'Umbundu', 'Urdu', 'Uyghur', 'Venetian', 'Vietnamese', 'Waray', 'Welsh', 'West Central Oromo', 'Western Persian', 'Wolof', 'Xhosa', 'Yoruba', 'Yue Chinese', 'Zulu'
   ]
@@ -46,13 +46,13 @@ const FileView = () => {
   const handleAdClosed = () => {
     console.log('Ad closed by user');
     setShowAd(false);
-    
+
     // Execute the pending action if it exists
     if (pendingActionRef.current) {
       console.log('Executing pending action after ad closed');
       const pendingAction = pendingActionRef.current;
       pendingActionRef.current = null; // Clear the pending action
-      
+
       // Execute the pending function
       pendingAction();
     }
@@ -62,7 +62,7 @@ const FileView = () => {
   const handleCloseAd = () => {
     console.log('Ad modal closed');
     setShowAd(false);
-    
+
   };
 
 
@@ -122,14 +122,14 @@ const FileView = () => {
   // Modified handleFileUpload to show ad first
   const handleTranslation = async () => {
     // console.log('File upload initiated - showing ad first');
-    
+
     // Store the actual upload function as pending action
     pendingActionRef.current = executehandleTranslation;
-    
+
     // Show the ad
     setShowAd(true);
   };
-  
+
 
   const executehandleTranslation = async () => {
     console.log("Starting translation...");
@@ -181,7 +181,7 @@ const FileView = () => {
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json",
-          
+
         },
         body: JSON.stringify({
           data: [text, selectedLanguageFrom, selectedLanguageTo],
@@ -233,7 +233,7 @@ const FileView = () => {
 
     // Try different endpoint patterns
     const endpointPatterns = [
-      
+
       `https://unesco-nllb.hf.space/call/translate/${eventId}`,
       `https://unesco-nllb.hf.space/api/queue/data/${eventId}`,
       `https://unesco-nllb.hf.space/queue/join/${eventId}`,
@@ -625,12 +625,12 @@ const FileView = () => {
 
       {/* Ad Interstitial Modal */}
 
-       <AdSenseInterstitialModal
+      <AdSenseInterstitialModal
         visible={showAd}
         onClose={handleCloseAd}
         onAdClosed={handleAdClosed}
         autoShow={true}
-      /> 
+      />
 
     </SafeAreaView>
   );
@@ -693,7 +693,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 20,
     // height: "35%",
-   minHeight: '27%',
+    minHeight: '27%',
     alignItems: 'center'
   },
   modalContentSummary: {
