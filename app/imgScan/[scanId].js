@@ -18,7 +18,7 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { FontAwesome6 } from "@expo/vector-icons";
 import { Picker } from '@react-native-picker/picker';
-import AdSenseInterstitialModal from '../../components/adsense.js'
+import AdSenseInterstitialModal from "../../components/adsense.js";
 
 const FileView = () => {
   const { scanId } = useLocalSearchParams();
