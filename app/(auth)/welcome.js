@@ -1,11 +1,7 @@
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import React from "react";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import AntDesign from "@expo/vector-icons/AntDesign";
 import { router } from "expo-router";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const signIn = () => {
   return (
@@ -18,7 +14,8 @@ const signIn = () => {
         <Text style={styles.head1}>Let's Get Started!</Text>
         <Text style={styles.head2}>Let's dive into your account</Text>
       </View>
-      <View style={styles.btnBox}>
+
+      {/* <View style={styles.btnBox}>
         <TouchableOpacity style={styles.btn}>
           <View style={styles.group}>
             <AntDesign name="google" size={22} color="black" />
@@ -43,7 +40,8 @@ const signIn = () => {
             <Text style={styles.groupTxt}> Continue with X</Text>
           </View>
         </TouchableOpacity>
-      </View>
+      </View> */}
+
       <View style={styles.sign}>
         <TouchableOpacity
           style={styles.signbtn}
