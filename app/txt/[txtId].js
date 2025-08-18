@@ -936,6 +936,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     // backgroundColor: "#eeee",
     marginTop: -25.2,
+
   },
   boxTxt: {},
   headerTitle: {
@@ -950,7 +951,7 @@ const styles = StyleSheet.create({
     lineHeight: 30,
     fontSize: 14,
     fontWeight: "500",
-    marginBottom: 8,
+    marginBottom: 28,
   },
   activeChunk: {
     backgroundColor: "#d0e6ff",

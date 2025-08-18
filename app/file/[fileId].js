@@ -16,10 +16,10 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AdSenseInterstitialModal from "../../components/Adsense.js";
 import TTSFunction from "../../components/Tts";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import { getDocumentById } from "../../lib/appwrite";
-import AdSenseInterstitialModal from "../../components/Adsense.js";
 
 const createChunks = (text, maxWords = 30) => {
   const words = text.split(/\s+/);
@@ -253,20 +253,20 @@ const FileView = () => {
     "Zulu",
   ];
 
-// Use ref to store the pending function to execute after ad closes
+  // Use ref to store the pending function to execute after ad closes
   const pendingActionRef = useRef(null);
 
   // Handler for when ad is closed
   const handleAdClosed = () => {
     console.log('Ad closed by user');
     setShowAd(false);
-    
+
     // Execute the pending action if it exists
     if (pendingActionRef.current) {
       console.log('Executing pending action after ad closed');
       const pendingAction = pendingActionRef.current;
       pendingActionRef.current = null; // Clear the pending action
-      
+
       // Execute the pending function
       pendingAction();
     }
@@ -276,7 +276,7 @@ const FileView = () => {
   const handleCloseAd = () => {
     console.log('Ad modal closed');
     setShowAd(false);
-    
+
   };
 
   useEffect(() => {
@@ -324,10 +324,10 @@ const FileView = () => {
   // Modified handleFileUpload to show ad first
   const handleTranslation = async () => {
     // console.log('File upload initiated - showing ad first');
-    
+
     // Store the actual upload function as pending action
     pendingActionRef.current = executehandleTranslation;
-    
+
     // Show the ad
     setShowAd(true);
   };
@@ -339,7 +339,7 @@ const FileView = () => {
     setIsTranslateModal(true);
 
     try {
-      const text = documentSummary || document?.extractedText || "";
+      const text = document?.extractedText;
       if (!text.trim()) {
         console.warn("No text to translate.");
         setTranslatedText("No text available to translate.");
@@ -481,9 +481,9 @@ const FileView = () => {
           attempt < 15
             ? 0
             : Math.min(
-                Math.floor((attempt - 15) / 2),
-                endpointPatterns.length - 1
-              );
+              Math.floor((attempt - 15) / 2),
+              endpointPatterns.length - 1
+            );
         const pollUrl = endpointPatterns[endpointIndex];
 
         if (endpointIndex > 0) {
@@ -499,8 +499,7 @@ const FileView = () => {
         });
 
         console.log(
-          `Poll attempt ${attempt + 1}, status: ${
-            pollResponse.status
+          `Poll attempt ${attempt + 1}, status: ${pollResponse.status
           }, endpoint: ${pollUrl}`
         );
 
@@ -784,7 +783,7 @@ const FileView = () => {
       </ScrollView>
       <TTSFunction
         text={
-          translatedText ||  document?.extractedText || ""
+          translatedText || document?.extractedText || ""
         }
         onChunkChange={handleChunkChange}
       />
@@ -945,13 +944,13 @@ const FileView = () => {
 
       {/* Ad Interstitial Modal */}
 
-       <AdSenseInterstitialModal
+      <AdSenseInterstitialModal
         visible={showAd}
         onClose={handleCloseAd}
         onAdClosed={handleAdClosed}
         autoShow={true}
-      /> 
-      
+      />
+
     </SafeAreaView>
   );
 };
@@ -982,7 +981,7 @@ const styles = StyleSheet.create({
     lineHeight: 30,
     fontSize: 14,
     fontWeight: "500",
-    marginBottom: 8,
+    marginBottom: 28,
   },
   activeChunk: {
     backgroundColor: "#d0e6ff",

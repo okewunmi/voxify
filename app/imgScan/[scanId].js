@@ -4,16 +4,16 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Picker } from '@react-native-picker/picker';
 import { useLocalSearchParams, useNavigation } from "expo-router";
-import { useEffect, useLayoutEffect, useState, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Modal,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
-  Alert
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AdSenseInterstitialModal from "../../components/Adsense";
@@ -120,7 +120,7 @@ const FileView = () => {
     setIsTranslateModalSelect(true);
   }
 
-  
+
 
   const executehandleTranslation = async () => {
     console.log("Starting translation...");
@@ -128,7 +128,7 @@ const FileView = () => {
     setIsTranslateModal(true);
 
     try {
-      const text = documentSummary || document?.extractedText || "";
+      const text = document?.extractedText;
       if (!text.trim()) {
         console.warn("No text to translate.");
         setTranslatedText("No text available to translate.");
@@ -475,7 +475,7 @@ const FileView = () => {
               document?.extractedText)}</Text>
         </View>
       </ScrollView>
-      <TTSFunction text={document?.extractedText || "Untitled"} />
+      <TTSFunction text={translatedText || document?.extractedText || "Untitled"} />
 
       {/* Modal triggered by header icon */}
       <Modal
@@ -664,7 +664,7 @@ const styles = StyleSheet.create({
     lineHeight: 30,
     fontSize: 14,
     fontWeight: "500",
-    marginBottom: 8,
+    marginBottom: 28,
   },
   activeChunk: {
     backgroundColor: "#d0e6ff",

@@ -743,6 +743,7 @@ import CardScan from "../../components/CardScan";
 import CardTxt from "../../components/CardTxt";
 import CardWeb from "../../components/CardWeb";
 import AdSenseInterstitialModal from "../../components/Adsense";
+import ProductionBannerAd from "../../components/BannerAd";
 
 const home = () => {
   const [uploading, setUploading] = useState(false);
@@ -1087,6 +1088,19 @@ const home = () => {
         </View>
       </View>
       
+      <ProductionBannerAd 
+                  adUnitId="ca-app-pub-2962255342437267/1367693967"
+                  backgroundColor="#d6c3f5ff"  // Even lighter blue for subtle contrast
+                  keywords={['fashion', 'clothing', 'shopping', 'lifestyle', 'accessories']}
+                  onAdLoaded={() => console.log('Banner ad loaded!')}
+                  onAdFailedToLoad={(error) => console.log('Banner ad failed:', error)}
+                  style={styles.ads}
+                  maxRetryAttempts={5}
+                  enableProgressiveDelay={true}
+                  retryDelayMs={3000} // 3 seconds between retries
+                  autoRetryOnNoFill={true}
+                  />
+
       <View style={styles.grid}>
         <View style={styles.box}>
           <TouchableOpacity
@@ -1290,6 +1304,11 @@ const styles = StyleSheet.create({
   upgradeTxt: {
     fontSize: 11,
     fontWeight: "bold",
+  },
+  ads:{
+    position: 'absolute',
+    top: 110,
+    zIndex: -10,
   },
   head: {
     fontSize: 20,
