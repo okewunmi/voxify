@@ -320,7 +320,8 @@ const FileView = () => {
     console.log("Starting summary...");
   };
 
-// Modified handleFileUpload to show ad first
+
+  // Modified handleFileUpload to show ad first
   const handleTranslation = async () => {
     // console.log('File upload initiated - showing ad first');
     
@@ -330,7 +331,7 @@ const FileView = () => {
     // Show the ad
     setShowAd(true);
   };
-  
+
 
   const executehandleTranslation = async () => {
     console.log("Starting translation...");
@@ -783,7 +784,7 @@ const FileView = () => {
       </ScrollView>
       <TTSFunction
         text={
-          translatedText || documentSummary || document?.extractedText || ""
+          translatedText ||  document?.extractedText || ""
         }
         onChunkChange={handleChunkChange}
       />

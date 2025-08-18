@@ -342,16 +342,7 @@ const FileView = () => {
     setIsTranslateModalSelect(true);
   };
 
-  // Modified handleFileUpload to show ad first
-  const handleTranslation = async () => {
-    // console.log('File upload initiated - showing ad first');
-
-    // Store the actual upload function as pending action
-    pendingActionRef.current = executehandleTranslation;
-
-    // Show the ad
-    setShowAd(true);
-  };
+  
 
   const executehandleTranslation = async () => {
     console.log("Starting translation...");
@@ -727,6 +718,17 @@ const FileView = () => {
     );
   };
   const chunks = createChunks(document.text || "");
+
+  // Modified handleFileUpload to show ad first
+  const handleTranslation = async () => {
+    // console.log('File upload initiated - showing ad first');
+
+    // Store the actual upload function as pending action
+    pendingActionRef.current = executehandleTranslation;
+
+    // Show the ad
+    setShowAd(true);
+  };
 
   const handleChunkChange = (index) => {
     setActiveIndex(index);
