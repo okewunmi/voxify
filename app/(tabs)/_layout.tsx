@@ -7,11 +7,12 @@ import { StatusBar } from 'expo-status-bar';
 import Entypo from '@expo/vector-icons/Entypo';
 import { useGlobalContext } from '../../context/GlobalProvider';
 import { StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TabLayout = () => {
   // const { loading, isLogged } = useGlobalContext();
   const { loading = true, isLogged = false } = useGlobalContext() ?? {};
-
+const insets = useSafeAreaInsets();
   if (!loading && !isLogged) return <Redirect href="/signIn" />;
 
   return (
@@ -25,11 +26,11 @@ const TabLayout = () => {
           tabBarStyle: {
             backgroundColor: '#fff',
             paddingTop: 8,
-            height: 80,
+            height: 80 + insets.bottom,
             borderTopWidth: 1,
             borderColor: '#E0E0E0',
             elevation: 0,
-            paddingBottom: 15,
+            paddingBottom: 15 + insets.bottom,
             width: '100%',
             alignSelf: 'center',
             justifyContent: 'center',
