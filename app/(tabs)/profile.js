@@ -71,25 +71,6 @@ const profile = () => {
         </TouchableOpacity>
       </View>
 
-      <ProductionBannerAd
-        adUnitId="ca-app-pub-2962255342437267/1367693967"
-        backgroundColor="#d6c3f5ff" // Even lighter blue for subtle contrast
-        keywords={[
-          "fashion",
-          "clothing",
-          "shopping",
-          "lifestyle",
-          "accessories",
-        ]}
-        onAdLoaded={() => console.log("Banner ad loaded!")}
-        onAdFailedToLoad={(error) => console.log("Banner ad failed:", error)}
-        style={styles.ads}
-        maxRetryAttempts={5}
-        enableProgressiveDelay={true}
-        retryDelayMs={3000} // 3 seconds between retries
-        autoRetryOnNoFill={true}
-      />
-
       <View style={styles.card}>
         <TouchableOpacity style={styles.logout}>
           <MaterialIcons name="security" size={24} color="black" />
