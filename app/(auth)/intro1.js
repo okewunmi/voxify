@@ -17,7 +17,7 @@ const into = () => {
             <Text style={styles.txt}>Transform Text into Speech with AI</Text>
             <Text style={styles.para}>
               Welcome to Voxify, the Ai-powered app that bring your text to
-              life. Convert any texts to high-quality in a few taps.
+              life. Convert any texts to high-quality audio in a few taps.
             </Text>
           </View>
           <View style={styles.boxDot}>

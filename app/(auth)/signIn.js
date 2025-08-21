@@ -76,7 +76,7 @@ const SignIn = () => {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.view}>
-        <Text style={styles.heading}>Welcom Back! </Text>
+        <Text style={styles.heading}>Welcome Back! </Text>
         <Text style={styles.txt}>
           Access your saved conversions, and continue where you left off.
         </Text>
@@ -136,7 +136,7 @@ const SignIn = () => {
           </Link>
         </View>
         <View style={styles.boxsignIn}>
-          <Text style={styles.privacy}>Dont't have account? </Text>
+          <Text style={styles.privacy}>Dont't have an account? </Text>
           <Link href="/signUp" style={styles.privacy2}>
             Sign up
           </Link>
@@ -236,6 +236,7 @@ const styles = StyleSheet.create({
   inputBox: {
     marginTop: 40,
     gap: 22,
+    color: "#000"
   },
   Box: {
     gap: 6,
@@ -250,21 +251,24 @@ const styles = StyleSheet.create({
     backgroundColor: "#ecf0f1",
     flexDirection: "row",
     gap: 5,
-    height: 40,
+    height: 44,
     alignItems: "center",
     // justifyContent: "space-between"
   },
   input: {
-    height: 40,
+    height: 44,
     width: "80%",
+    color: '#000'
   },
   boxprivacy: {
     flexDirection: "row",
+    gap: 40
   },
   boxsignIn: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: -12,
+    marginTop: -2,
+    gap: 20,
   },
   checkbox: {
     marginRight: 10,

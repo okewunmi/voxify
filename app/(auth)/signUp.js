@@ -219,6 +219,7 @@ const styles = StyleSheet.create({
   privacy: {
     fontSize: 14,
     color: "#17202a",
+    gap: 30,
   },
   signbtn: {
     backgroundColor: "#3273F6",
@@ -236,6 +237,7 @@ const styles = StyleSheet.create({
   inputBox: {
     marginTop: 20,
     gap: 22,
+    color: "#000",
   },
   Box: {
     gap: 6,
@@ -257,14 +259,17 @@ const styles = StyleSheet.create({
   input: {
     height: 40,
     width: "80%",
+    color: "#000"
   },
   boxprivacy: {
     flexDirection: "row",
+    gap: 40
   },
   boxsignIn: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: -12,
+    marginTop: -2,
+    gap: 20
   },
   checkbox: {
     marginRight: 15,

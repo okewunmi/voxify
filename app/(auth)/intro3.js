@@ -13,11 +13,11 @@ const into = () => {
         <View style={styles.box}>
           <View style={styles.boxTxt}>
             <Text style={styles.txt}>
-              Unlock Prenium Voices & Advanced Features{" "}
+              Unlock Premium Voices & Advanced Features{" "}
             </Text>
             <Text style={styles.para}>
-              Unlock prenium voices, faster processing, and more customization
-              options with Voxify Prenium for enchanced experience.
+              Unlock premium voices, faster processing, and more customization
+              options with Voxify Premium for enchanced experience.
             </Text>
           </View>
           <View style={styles.boxDot}>
