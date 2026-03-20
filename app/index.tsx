@@ -12,7 +12,7 @@ const index = () => {
       router.push('intro1'); // Navigate to intro1.js after 3 seconds
     }, 3000);
 
-    return () => clearTimeout(timer); // Clear timer on component unmount
+    return () => clearTimeout(timer);
   }, [navigation]);
 
   
