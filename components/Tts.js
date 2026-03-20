@@ -909,7 +909,42 @@ const TTSFunction = ({ text, onChunkChange }) => {
 
   };
 
-  const downloadAudio = async (text, filename = 'audio.wav') => {
+  // const downloadAudio = async (text, filename = 'audio.wav') => {
+  //   if (isDownloading) {
+  //     Alert.alert('Download in Progress', 'Please wait for the current download to complete');
+  //     return;
+  //   }
+
+  //   try {
+  //     setIsDownloading(true);
+
+  //     const { status } = await MediaLibrary.requestPermissionsAsync();
+  //     if (status !== 'granted') {
+  //       Alert.alert('Permission denied', 'Media library permission is required');
+  //       setIsDownloading(false);
+  //       return;
+  //     }
+
+  //     const audioUrl = await generateAudioFromText(text);
+  //     const fileUri = `${FileSystem.cacheDirectory}${filename}`;
+  //     const downloadResult = await FileSystem.downloadAsync(audioUrl, fileUri);
+
+  //     if (downloadResult.status === 200) {
+  //       const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
+  //       await MediaLibrary.createAlbumAsync('TTS Audio', asset, false);
+  //       Alert.alert('Success', 'Audio saved to your device');
+  //     } else {
+  //       throw new Error('Download failed');
+  //     }
+  //   } catch (error) {
+  //     console.error('Download failed:', error);
+  //     Alert.alert("Error", "Failed to download audio");
+  //   } finally {
+  //     setIsDownloading(false);
+  //   }
+  // };
+  
+const downloadAudio = async (text, filename = 'audio.wav') => {
     if (isDownloading) {
       Alert.alert('Download in Progress', 'Please wait for the current download to complete');
       return;
@@ -926,13 +961,18 @@ const TTSFunction = ({ text, onChunkChange }) => {
       }
 
       const audioUrl = await generateAudioFromText(text);
-      const fileUri = `${FileSystem.cacheDirectory}${filename}`;
+      
+      // Use documentDirectory instead of cacheDirectory
+      const fileUri = `${FileSystem.documentDirectory}${filename}`;
       const downloadResult = await FileSystem.downloadAsync(audioUrl, fileUri);
 
       if (downloadResult.status === 200) {
         const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
         await MediaLibrary.createAlbumAsync('TTS Audio', asset, false);
         Alert.alert('Success', 'Audio saved to your device');
+
+        // Clean up the temp file after saving
+        await FileSystem.deleteAsync(fileUri, { idempotent: true });
       } else {
         throw new Error('Download failed');
       }

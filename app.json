@@ -7,7 +7,6 @@
     "icon": "./assets/images/icons.png",
     "scheme": "voxify",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "runtimeVersion": {
@@ -19,9 +18,15 @@
         "foregroundImage": "./assets/images/icons.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
       "package": "com.fourfive.voxify",
-      "runtimeVersion": "1.0.0"
+      "runtimeVersion": "1.0.0",
+      "permissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_AUDIO",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_IMAGES"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -42,7 +47,15 @@
       ],
       "expo-sqlite",
       "expo-build-properties",
-      "expo-audio"
+      "expo-audio",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow voxify to access your media library.",
+          "savePhotosPermission": "Allow voxify to save audio files.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
