@@ -3,11 +3,9 @@ import { SplashScreen, Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import { StatusBar } from "expo-status-bar";
 import GlobalProvider, { useGlobalContext } from "../context/GlobalProvider";
-import { TouchableOpacity, View } from "react-native";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import mobileAds from "react-native-google-mobile-ads";
+import {  View } from "react-native";
+
+
 // Prevent auto hiding of splash screen
 SplashScreen.preventAutoHideAsync();
 

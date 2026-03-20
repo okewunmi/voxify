@@ -16,7 +16,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AdSenseInterstitialModal from "../../components/Adsense.js";
+// import AdSenseInterstitialModal from "../../components/Adsense.js";
 import TTSFunction from "../../components/Tts";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import { getDocumentById } from "../../lib/appwrite";
@@ -321,19 +321,7 @@ const FileView = () => {
   };
 
 
-  // Modified handleFileUpload to show ad first
   const handleTranslation = async () => {
-    // console.log('File upload initiated - showing ad first');
-
-    // Store the actual upload function as pending action
-    pendingActionRef.current = executehandleTranslation;
-
-    // Show the ad
-    setShowAd(true);
-  };
-
-
-  const executehandleTranslation = async () => {
     console.log("Starting translation...");
     setIsTranslateModalSelect(false);
     setIsTranslateModal(true);
@@ -745,21 +733,6 @@ const FileView = () => {
             {document?.title || "Untitled"}
           </Text>
         </View>
-        {/*
-        <View>
-          {chunks.map((chunk, index) => (
-            <Text
-              key={index}
-              ref={(ref) => (chunkRefs.current[index] = ref)}
-              style={[
-                styles.txt,
-                index === activeIndex && styles.activeChunk,
-              ]}
-            >
-              {chunk}
-            </Text>
-          ))}
-       </View>*/}
         <View>
           {translatedText ? (
             <Text style={styles.txt}>{translatedText}</Text>
@@ -805,18 +778,7 @@ const FileView = () => {
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Artificial Intellingent </Text>
             <View style={styles.modalBtns}>
-              {/*<TouchableOpacity
-                style={styles.summaryButton}
-                // onPress={() => setIsModalVisible(false)}
-                onPress={handleSummary}
-              >
-                <View style={styles.summaryView}>
-                  <MaterialIcons name="summarize" size={22} color="gold" />
-                  <Text style={styles.summaryText}>Summarize</Text>
-                </View>
-
-                <MaterialIcons name="arrow-forward-ios" size={20} color="grey" />
-              </TouchableOpacity>*/}
+           
               <TouchableOpacity
                 style={styles.summaryButton}
                 onPress={handleTranslate}
@@ -941,15 +903,6 @@ const FileView = () => {
           </View>
         </View>
       </Modal>
-
-      {/* Ad Interstitial Modal */}
-
-      <AdSenseInterstitialModal
-        visible={showAd}
-        onClose={handleCloseAd}
-        onAdClosed={handleAdClosed}
-        autoShow={true}
-      />
 
     </SafeAreaView>
   );

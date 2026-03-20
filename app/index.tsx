@@ -3,7 +3,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useEffect } from 'react';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useNavigation, router } from 'expo-router';
-import mobileAds from 'react-native-google-mobile-ads';
 
 const index = () => {
   const navigation = useNavigation();
@@ -16,14 +15,6 @@ const index = () => {
     return () => clearTimeout(timer); // Clear timer on component unmount
   }, [navigation]);
 
-
-  useEffect(()=>{
-    mobileAds()
-    .initialize()
-    .then(adapterStatuses=>{
-
-    })
-  }, []);
   
   return (
     <SafeAreaView style={styles.safe}>

@@ -15,7 +15,6 @@ import {
   View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AdSenseInterstitialModal from "../../components/Adsense";
 import TTSFunction from "../../components/Tts";
 import { useGlobalContext } from "../../context/GlobalProvider";
 import { getTextById } from "../../lib/appwrite";
@@ -267,27 +266,7 @@ const FileView = () => {
   // Use ref to store the pending function to execute after ad closes
   const pendingActionRef = useRef(null);
 
-  // Handler for when ad is closed
-  const handleAdClosed = () => {
-    console.log("Ad closed by user");
-    setShowAd(false);
 
-    // Execute the pending action if it exists
-    if (pendingActionRef.current) {
-      console.log("Executing pending action after ad closed");
-      const pendingAction = pendingActionRef.current;
-      pendingActionRef.current = null; // Clear the pending action
-
-      // Execute the pending function
-      pendingAction();
-    }
-  };
-
-  // Handler for manual close
-  const handleCloseAd = () => {
-    console.log("Ad modal closed");
-    setShowAd(false);
-  };
 
   useEffect(() => {
     fetchDocument();
@@ -343,8 +322,7 @@ const FileView = () => {
   };
 
   
-
-  const executehandleTranslation = async () => {
+  const handleTranslation = async () => {
     console.log("Starting translation...");
     setIsTranslateModalSelect(false);
     setIsTranslateModal(true);
@@ -719,17 +697,6 @@ const FileView = () => {
   };
   const chunks = createChunks(document.text || "");
 
-  // Modified handleFileUpload to show ad first
-  const handleTranslation = async () => {
-    // console.log('File upload initiated - showing ad first');
-
-    // Store the actual upload function as pending action
-    pendingActionRef.current = executehandleTranslation;
-
-    // Show the ad
-    setShowAd(true);
-  };
-
   const handleChunkChange = (index) => {
     setActiveIndex(index);
     if (chunkRefs.current[index]) {
@@ -912,14 +879,6 @@ const FileView = () => {
           </View>
         </View>
       </Modal>
-      {/* Ad Interstitial Modal */}
-
-      <AdSenseInterstitialModal
-        visible={showAd}
-        onClose={handleCloseAd}
-        onAdClosed={handleAdClosed}
-        autoShow={true}
-      />
     </SafeAreaView>
   );
 };
