@@ -4,7 +4,6 @@ import { useFonts } from "expo-font";
 import { StatusBar } from "expo-status-bar";
 import GlobalProvider, { useGlobalContext } from "../context/GlobalProvider";
 import {  View } from "react-native";
-npm install --legacy-peer-deps
 
 // Prevent auto hiding of splash screen
 SplashScreen.preventAutoHideAsync();

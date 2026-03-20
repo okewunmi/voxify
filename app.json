@@ -8,10 +8,7 @@
     "scheme": "voxify",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true,
-      "runtimeVersion": {
-        "policy": "appVersion"
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +16,6 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.fourfive.voxify",
-      "runtimeVersion": "1.0.0",
       "permissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
@@ -66,9 +62,6 @@
         "projectId": "7c9414d3-bdbc-473f-a6ee-c4236297857a"
       }
     },
-    "owner": "fourfive",
-    "updates": {
-      "url": "https://u.expo.dev/7c9414d3-bdbc-473f-a6ee-c4236297857a"
-    }
+    "owner": "fourfive"
   }
 }
