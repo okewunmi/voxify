@@ -51,7 +51,8 @@
           "savePhotosPermission": "Allow voxify to save audio files.",
           "isAccessMediaLocationEnabled": true
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true
