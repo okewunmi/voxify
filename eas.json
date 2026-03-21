@@ -17,8 +17,7 @@
       "channel": "preview",
       "android": {
         "buildType": "apk"
-      },
-      "prebuildCommand": "npx expo prebuild --clean"
+      }
     },
     "production": {
       "autoIncrement": true,
