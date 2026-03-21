@@ -18,13 +18,12 @@
       "android": {
         "buildType": "apk"
       },
-      "env": {
-        "EXPO_NO_UPDATES": "1"
-      }
+      "prebuildCommand": "npx expo prebuild --clean"
     },
     "production": {
       "autoIncrement": true,
-      "channel": "production"
+      "channel": "production",
+      "prebuildCommand": "npx expo prebuild --clean"
     }
   },
   "submit": {
